@@ -92,7 +92,7 @@ Framework built for:
 ### ⚠️ Important Security Notes
 
 1. **JWT Secret**: The application will not start without a valid `JWT_SECRET` environment variable
-2. **File Uploads**: Currently using Multer 1.4.5-lts (consider upgrading to 2.x for production)
+2. **File Uploads**: Using Multer 2.0.2 (secure, patched version)
 3. **Database**: Mock in-memory storage is used by default. Configure Prisma for production.
 4. **API Keys**: External API integrations (SoundCloud, Spotify) require valid credentials
 
