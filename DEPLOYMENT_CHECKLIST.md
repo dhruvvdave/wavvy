@@ -9,7 +9,6 @@ Use this checklist to deploy Wavvy to production.
 - [ ] Copy environment file: `cp .env.example .env`
 - [ ] Configure database URL in `.env`
 - [ ] Set JWT_SECRET in `.env` (required - use strong random string)
-- [ ] (Optional) Add SOUNDCLOUD_CLIENT_ID if using SoundCloud
 - [ ] (Optional) Add SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET if using Spotify
 
 ### Dependencies Installation
@@ -94,7 +93,6 @@ Use this checklist to deploy Wavvy to production.
 - [ ] User registration works
 - [ ] User login works
 - [ ] Beat creation/saving works
-- [ ] SoundCloud search works (if configured)
 - [ ] Spotify search works (if configured)
 
 ### Performance

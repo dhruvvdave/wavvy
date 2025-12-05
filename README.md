@@ -49,7 +49,6 @@ Features:
 
 ### 🔊 Audio Integration Ready
 Framework built for:
-- 🟠 **SoundCloud** integration (search, stream, visualize)
 - 🟢 **Spotify** integration (search, 30s previews, visualize)
 - 🔗 **Direct URL** audio streaming
 
@@ -94,7 +93,7 @@ Framework built for:
 1. **JWT Secret**: The application will not start without a valid `JWT_SECRET` environment variable
 2. **File Uploads**: Using Multer 2.0.2 (secure, patched version)
 3. **Database**: Mock in-memory storage is used by default. Configure Prisma for production.
-4. **API Keys**: External API integrations (SoundCloud, Spotify) require valid credentials
+4. **API Keys**: Spotify integration requires valid credentials
 
 ### 1. Clone the Repository
 ```bash
@@ -111,7 +110,6 @@ cp .env.example .env
 Required environment variables:
 - `DATABASE_URL`: PostgreSQL connection string
 - `JWT_SECRET`: Secret key for JWT tokens
-- `SOUNDCLOUD_CLIENT_ID`: SoundCloud API client ID (optional)
 - `SPOTIFY_CLIENT_ID`: Spotify API client ID (optional)
 - `SPOTIFY_CLIENT_SECRET`: Spotify API client secret (optional)
 
@@ -164,12 +162,6 @@ npm run dev
 The app will be available at `http://localhost:3000`
 
 ## 🔑 API Keys Setup
-
-### SoundCloud API
-1. Create a SoundCloud account at https://soundcloud.com
-2. Register your app at https://developers.soundcloud.com/
-3. Get your Client ID
-4. Add to `.env`: `SOUNDCLOUD_CLIENT_ID=your_client_id`
 
 ### Spotify API
 1. Go to https://developer.spotify.com/dashboard

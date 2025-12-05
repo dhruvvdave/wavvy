@@ -168,38 +168,6 @@ Authorization: Bearer {token}
 }
 ```
 
-## SoundCloud Integration
-
-### Search Tracks
-```http
-GET /soundcloud/search?q=search_query
-```
-
-**Response:**
-```json
-{
-  "collection": [
-    {
-      "id": 123456,
-      "title": "Track Title",
-      "user": {
-        "username": "Artist Name"
-      },
-      "artwork_url": "https://...",
-      "duration": 180000,
-      "permalink_url": "https://soundcloud.com/..."
-    }
-  ]
-}
-```
-
-**Note:** Requires `SOUNDCLOUD_CLIENT_ID` in environment variables.
-
-### Get Stream URL
-```http
-GET /soundcloud/stream/:trackId
-```
-
 ## Spotify Integration
 
 ### Search Tracks
@@ -303,4 +271,4 @@ GET /health
 - All timestamps are in ISO 8601 format
 - File uploads are limited to 10MB
 - JWT tokens expire after 7 days
-- SoundCloud and Spotify integrations require valid API credentials
+- Spotify integration requires valid API credentials
