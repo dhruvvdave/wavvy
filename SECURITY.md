@@ -121,12 +121,11 @@ All security vulnerabilities have been identified, patched, and verified. The Wa
 **Code Location**: `server/src/index.ts`
 
 #### External API Protection
-- ✅ Server-side proxy for SoundCloud API
 - ✅ Server-side proxy for Spotify API
 - ✅ API keys never exposed to client
 - ✅ Rate limiting ready for implementation
 
-**Code Location**: `server/src/routes/soundcloud.ts`, `server/src/routes/spotify.ts`
+**Code Location**: `server/src/routes/spotify.ts`
 
 ---
 

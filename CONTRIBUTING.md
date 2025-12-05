@@ -69,7 +69,7 @@ Before submitting a PR:
 
 Use clear and descriptive commit messages:
 
-- `feat: Add SoundCloud search functionality`
+- `feat: Add Spotify search functionality`
 - `fix: Fix visualizer performance issue`
 - `docs: Update README with new features`
 - `style: Format code with Prettier`

@@ -4,11 +4,10 @@ import Sequencer from '../components/Sequencer/Sequencer';
 import MelodyPads from '../components/MelodyPads/MelodyPads';
 import Visualizer from '../components/Visualizer/Visualizer';
 import AudioPlayer from '../components/AudioPlayer/AudioPlayer';
-import SoundCloudSearch from '../components/SoundCloud/SoundCloudSearch';
 import SpotifySearch from '../components/Spotify/SpotifySearch';
 import DirectURLPlayer from '../components/UI/DirectURLPlayer';
 
-type AudioSourceTab = 'upload' | 'soundcloud' | 'spotify' | 'url';
+type AudioSourceTab = 'upload' | 'spotify' | 'url' | 'sequencer';
 
 export default function HomePage() {
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
@@ -16,9 +15,9 @@ export default function HomePage() {
 
   const tabs: { id: AudioSourceTab; label: string; icon: string }[] = [
     { id: 'upload', label: 'Upload', icon: '📁' },
-    { id: 'soundcloud', label: 'SoundCloud', icon: '🟠' },
     { id: 'spotify', label: 'Spotify', icon: '🟢' },
     { id: 'url', label: 'Direct URL', icon: '🔗' },
+    { id: 'sequencer', label: 'Sequencer', icon: '🥁' },
   ];
 
   return (
@@ -71,9 +70,15 @@ export default function HomePage() {
 
         <div>
           {activeTab === 'upload' && <AudioPlayer onAudioElement={setAudioElement} />}
-          {activeTab === 'soundcloud' && <SoundCloudSearch />}
           {activeTab === 'spotify' && <SpotifySearch />}
           {activeTab === 'url' && <DirectURLPlayer />}
+          {activeTab === 'sequencer' && (
+            <div className="glass p-6 rounded-xl">
+              <p className="text-center text-gray-400">
+                Scroll down to use the Sequencer and Melody Pads below!
+              </p>
+            </div>
+          )}
         </div>
       </motion.div>
 

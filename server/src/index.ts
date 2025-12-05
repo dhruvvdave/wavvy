@@ -4,7 +4,6 @@ import dotenv from 'dotenv';
 import authRouter from './routes/auth.js';
 import beatsRouter from './routes/beats.js';
 import uploadRouter from './routes/upload.js';
-import soundcloudRouter from './routes/soundcloud.js';
 import spotifyRouter from './routes/spotify.js';
 
 dotenv.config();
@@ -27,7 +26,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/auth', authRouter);
 app.use('/api/beats', beatsRouter);
 app.use('/api/upload', uploadRouter);
-app.use('/api/soundcloud', soundcloudRouter);
 app.use('/api/spotify', spotifyRouter);
 
 // Health check

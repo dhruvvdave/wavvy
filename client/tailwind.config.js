@@ -10,7 +10,6 @@ export default {
         primary: '#8b5cf6',
         secondary: '#06b6d4',
         accent: '#ec4899',
-        soundcloud: '#ff5500',
         spotify: '#1db954',
         dark: '#0a0a0f',
       },

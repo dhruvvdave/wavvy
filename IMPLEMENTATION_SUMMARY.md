@@ -61,15 +61,7 @@ Technical features:
 - Time display (current/duration)
 - Integration with visualizer
 
-#### 5. SoundCloud Integration ✅
-- Track search functionality
-- Server-side proxy API
-- Track info display with artwork
-- External SoundCloud links
-- Error handling for API failures
-- Custom hook (useSoundCloud)
-
-#### 6. Spotify Integration ✅
+#### 5. Spotify Integration ✅
 - Track search via Spotify Web API
 - OAuth token management
 - Album artwork display
@@ -77,13 +69,13 @@ Technical features:
 - External Spotify links
 - Custom hook (useSpotify)
 
-#### 7. Direct URL Audio ✅
+#### 6. Direct URL Audio ✅
 - URL input validation
 - Support for direct audio file URLs
 - Error handling for invalid URLs
 - Supported formats: MP3, WAV, OGG, M4A
 
-#### 8. Backend API ✅
+#### 7. Backend API ✅
 Authentication:
 - User registration with bcrypt
 - Login with JWT tokens
@@ -103,7 +95,6 @@ File Upload:
 - Size limits (10MB)
 
 External APIs:
-- SoundCloud proxy routes
 - Spotify authentication & search
 - Error handling and fallbacks
 
@@ -115,7 +106,6 @@ External APIs:
   - Primary: `#8b5cf6` (purple)
   - Secondary: `#06b6d4` (cyan)
   - Accent: `#ec4899` (pink)
-  - SoundCloud: `#ff5500` (orange)
   - Spotify: `#1db954` (green)
 
 #### Visual Effects
@@ -171,13 +161,11 @@ wavvy/
 │   │   │   ├── Layout/            (Layout.tsx, Header.tsx)
 │   │   │   ├── MelodyPads/        (MelodyPads.tsx)
 │   │   │   ├── Sequencer/         (Sequencer.tsx)
-│   │   │   ├── SoundCloud/        (SoundCloudSearch.tsx)
 │   │   │   ├── Spotify/           (SpotifySearch.tsx)
 │   │   │   ├── UI/                (DirectURLPlayer.tsx)
 │   │   │   └── Visualizer/        (Visualizer.tsx)
 │   │   ├── hooks/
 │   │   │   ├── useAudioAnalyzer.ts
-│   │   │   ├── useSoundCloud.ts
 │   │   │   └── useSpotify.ts
 │   │   ├── services/
 │   │   │   └── api.ts
@@ -198,7 +186,6 @@ wavvy/
 │       ├── routes/
 │       │   ├── auth.ts
 │       │   ├── beats.ts
-│       │   ├── soundcloud.ts
 │       │   ├── spotify.ts
 │       │   └── upload.ts
 │       ├── prisma/
@@ -290,7 +277,6 @@ wavvy/
 DATABASE_URL
 JWT_SECRET (required)
 PORT
-SOUNDCLOUD_CLIENT_ID
 SPOTIFY_CLIENT_ID
 SPOTIFY_CLIENT_SECRET
 ```
