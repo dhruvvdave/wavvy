@@ -21,20 +21,22 @@ export default function SpotifySearch() {
   const [query, setQuery] = useState('');
   const [tracks, setTracks] = useState<SpotifyTrack[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const searchTracks = async () => {
     if (!query) return;
     
     setLoading(true);
+    setError(null);
     try {
       const response = await axios.get(`${API_URL}/api/spotify/search`, {
         params: { q: query, type: 'track' }
       });
       setTracks(response.data.tracks?.items || []);
-    } catch (error) {
-      console.error('Error searching Spotify:', error);
-      // Show helpful error message to user
-      alert('Spotify API is not configured. Please add your Spotify credentials to the server.');
+    } catch (err) {
+      console.error('Error searching Spotify:', err);
+      setError('Spotify API is not configured. Please add your Spotify credentials to the server.');
+      setTracks([]);
     } finally {
       setLoading(false);
     }
@@ -71,6 +73,22 @@ export default function SpotifySearch() {
           {loading ? '🔄' : '🔍'} Search
         </motion.button>
       </div>
+
+      {error && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass p-4 rounded-lg border-l-4 border-red-500 bg-red-500/10"
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">⚠️</span>
+            <div>
+              <h4 className="font-semibold text-red-400 mb-1">Configuration Required</h4>
+              <p className="text-sm text-gray-300">{error}</p>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       <div className="space-y-3 max-h-96 overflow-y-auto">
         {tracks.map((track) => (
@@ -113,7 +131,7 @@ export default function SpotifySearch() {
         ))}
       </div>
 
-      {tracks.length === 0 && !loading && (
+      {tracks.length === 0 && !loading && !error && (
         <div className="text-center text-gray-500 py-8">
           Search for tracks on Spotify
         </div>

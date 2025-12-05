@@ -78,20 +78,22 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
       // Prefer external audio element if available and playing
       if (externalAnalyserRef.current && audioElement && !audioElement.paused) {
         const bufferLength = externalAnalyserRef.current.frequencyBinCount;
-        dataArray = new Uint8Array(bufferLength);
-        // @ts-expect-error - TypeScript has issues with the Uint8Array type here
-        externalAnalyserRef.current.getByteFrequencyData(dataArray);
+        const tempArray = new Uint8Array(bufferLength);
+        externalAnalyserRef.current.getByteFrequencyData(tempArray);
+        dataArray = tempArray;
         hasAudio = dataArray.some(val => val > 0);
       } 
       // Otherwise use Tone.js analyser
       else if (toneAnalyserRef.current) {
         const values = toneAnalyserRef.current.getValue();
+        const isArray = Array.isArray(values);
         dataArray = new Uint8Array(values.length);
+        
+        // Convert from dB (-100 to 0) to 0-255
         for (let i = 0; i < values.length; i++) {
-          // Convert from dB (-100 to 0) to 0-255
-          const val = Array.isArray(values) ? values[i] : 0;
-          const value = typeof val === 'number' ? val : 0;
-          dataArray[i] = Math.max(0, Math.min(255, (value + 100) * 2.55));
+          const val = isArray ? values[i] : 0;
+          const numVal = typeof val === 'number' ? val : 0;
+          dataArray[i] = Math.max(0, Math.min(255, (numVal + 100) * 2.55));
         }
         hasAudio = dataArray.some(val => val > 5);
       } else {
