@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import * as Tone from 'tone';
 import { useAudioStore } from '../../stores/audioStore';
 import { VisualizerMode } from '../../types';
 
@@ -8,24 +7,40 @@ interface VisualizerProps {
   audioElement?: HTMLAudioElement | null;
 }
 
+interface Particle {
+  angle: number;
+  radius: number;
+  speed: number;
+  size: number;
+  opacity: number;
+  hue: number;
+}
+
 export default function Visualizer({ audioElement }: VisualizerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
   const { visualizerMode, setVisualizerMode, audioContext, analyser, setAudioContext, setAnalyser } = useAudioStore();
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const toneAnalyserRef = useRef<Tone.Analyser | null>(null);
-  const externalAnalyserRef = useRef<AnalyserNode | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const particlesRef = useRef<Particle[]>([]);
 
-  // Connect to Tone.js master output for sequencer visualization
+  // Initialize particles for galaxy mode
   useEffect(() => {
-    if (!toneAnalyserRef.current) {
-      const analyser = new Tone.Analyser('fft', 256);
-      Tone.getDestination().connect(analyser);
-      toneAnalyserRef.current = analyser;
+    const particles: Particle[] = [];
+    for (let i = 0; i < 200; i++) {
+      particles.push({
+        angle: Math.random() * Math.PI * 2,
+        radius: Math.random() * 150 + 50,
+        speed: (Math.random() - 0.5) * 0.01,
+        size: Math.random() * 2 + 1,
+        opacity: Math.random() * 0.8 + 0.2,
+        hue: Math.random() * 60 + 260, // Purple to pink range
+      });
     }
+    particlesRef.current = particles;
   }, []);
 
-  // Handle external audio elements
+  // Handle audio element connection
   useEffect(() => {
     if (!audioElement || !canvasRef.current) return;
 
@@ -39,10 +54,10 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
 
     if (!analyzerNode) {
       analyzerNode = context.createAnalyser();
-      analyzerNode.fftSize = 2048;
-      analyzerNode.smoothingTimeConstant = 0.8;
+      analyzerNode.fftSize = 512;
+      analyzerNode.smoothingTimeConstant = 0.85;
       setAnalyser(analyzerNode);
-      externalAnalyserRef.current = analyzerNode;
+      analyserRef.current = analyzerNode;
 
       try {
         const source = context.createMediaElementSource(audioElement);
@@ -51,6 +66,8 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
       } catch (error) {
         console.debug('Audio source already connected:', error);
       }
+    } else {
+      analyserRef.current = analyzerNode;
     }
   }, [audioElement, audioContext, analyser, setAudioContext, setAnalyser]);
 
@@ -71,40 +88,25 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
     const draw = () => {
       animationRef.current = requestAnimationFrame(draw);
       
-      // Try to get data from either Tone.js or external analyser
+      // Get frequency data from analyser
       let dataArray: Uint8Array;
       let hasAudio = false;
 
-      // Prefer external audio element if available and playing
-      if (externalAnalyserRef.current && audioElement && !audioElement.paused) {
-        const bufferLength = externalAnalyserRef.current.frequencyBinCount;
+      if (analyserRef.current && audioElement && !audioElement.paused) {
+        const bufferLength = analyserRef.current.frequencyBinCount;
         const tempArray = new Uint8Array(bufferLength);
-        externalAnalyserRef.current.getByteFrequencyData(tempArray);
+        analyserRef.current.getByteFrequencyData(tempArray);
         dataArray = tempArray;
         hasAudio = dataArray.some(val => val > 0);
-      } 
-      // Otherwise use Tone.js analyser
-      else if (toneAnalyserRef.current) {
-        const values = toneAnalyserRef.current.getValue();
-        const isArray = Array.isArray(values);
-        dataArray = new Uint8Array(values.length);
-        
-        // Convert from dB (-100 to 0) to 0-255
-        for (let i = 0; i < values.length; i++) {
-          const val = isArray ? values[i] : 0;
-          const numVal = typeof val === 'number' ? val : 0;
-          dataArray[i] = Math.max(0, Math.min(255, (numVal + 100) * 2.55));
-        }
-        hasAudio = dataArray.some(val => val > 5);
       } else {
         // Fallback to empty data
         dataArray = new Uint8Array(256).fill(0);
       }
 
-      // Enhanced background with gradient
+      // Dark gradient background
       const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-      gradient.addColorStop(0, 'rgba(3, 0, 20, 0.3)');
-      gradient.addColorStop(1, 'rgba(10, 10, 31, 0.3)');
+      gradient.addColorStop(0, '#050507');
+      gradient.addColorStop(1, '#0a0a0f');
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -113,20 +115,17 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
         drawIdleAnimation(ctx, canvas.width, canvas.height);
       } else {
         switch (visualizerMode) {
-          case 'frequency':
-            drawFrequencyBars(ctx, dataArray, canvas.width, canvas.height);
+          case 'bars':
+            drawBars(ctx, dataArray, canvas.width, canvas.height);
             break;
-          case 'waveform':
-            drawWaveform(ctx, dataArray, canvas.width, canvas.height);
+          case 'wave':
+            drawWave(ctx, dataArray, canvas.width, canvas.height);
             break;
           case 'circular':
             drawCircular(ctx, dataArray, canvas.width, canvas.height);
             break;
-          case 'particles':
-            drawParticles(ctx, dataArray, canvas.width, canvas.height);
-            break;
-          case 'spectrum':
-            drawSpectrum(ctx, dataArray, canvas.width, canvas.height);
+          case 'galaxy':
+            drawGalaxy(ctx, dataArray, canvas.width, canvas.height);
             break;
         }
       }
@@ -152,10 +151,10 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
       const radius = 50 + i * 40 + Math.sin(time * 2 + i) * 20;
       const alpha = 0.3 - i * 0.1;
       
-      ctx.strokeStyle = `rgba(139, 92, 246, ${alpha})`;
+      ctx.strokeStyle = `rgba(168, 85, 247, ${alpha})`;
       ctx.lineWidth = 2;
       ctx.shadowBlur = 20;
-      ctx.shadowColor = 'rgba(139, 92, 246, 0.5)';
+      ctx.shadowColor = 'rgba(168, 85, 247, 0.5)';
       ctx.beginPath();
       ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
       ctx.stroke();
@@ -166,92 +165,137 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
     ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
     ctx.font = '20px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('Waiting for audio...', centerX, centerY);
+    ctx.fillText('Upload or search for music...', centerX, centerY);
   };
 
-  const drawFrequencyBars = (ctx: CanvasRenderingContext2D, dataArray: Uint8Array, width: number, height: number) => {
-    const barWidth = (width / dataArray.length) * 2.5;
-    let x = 0;
-
-    for (let i = 0; i < dataArray.length; i++) {
-      const barHeight = (dataArray[i] / 255) * height * 0.8;
+  // Bars mode - gradient bars with reflection
+  const drawBars = (ctx: CanvasRenderingContext2D, dataArray: Uint8Array, width: number, height: number) => {
+    const barCount = 64;
+    const barWidth = width / barCount - 2;
+    
+    for (let i = 0; i < barCount; i++) {
+      const value = dataArray[Math.floor(i * dataArray.length / barCount)] / 255;
+      const barHeight = value * height * 0.7;
+      const x = i * (barWidth + 2);
       
-      const hue = (i / dataArray.length) * 360;
-      const gradient = ctx.createLinearGradient(x, height - barHeight, x, height);
-      gradient.addColorStop(0, `hsla(${hue}, 100%, 60%, 0.9)`);
-      gradient.addColorStop(0.5, `hsla(${hue}, 100%, 50%, 0.7)`);
-      gradient.addColorStop(1, `hsla(${hue}, 100%, 40%, 0.3)`);
+      // Main bar with gradient
+      const gradient = ctx.createLinearGradient(x, height, x, height - barHeight);
+      gradient.addColorStop(0, '#a855f7');
+      gradient.addColorStop(0.5, '#22d3ee');
+      gradient.addColorStop(1, '#f472b6');
       
       ctx.fillStyle = gradient;
-      ctx.fillRect(x, height - barHeight, barWidth, barHeight);
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = `rgba(168, 85, 247, ${value * 0.8})`;
       
-      // Add glow effect
-      if (barHeight > height * 0.3) {
-        ctx.shadowBlur = 20;
-        ctx.shadowColor = `hsla(${hue}, 100%, 60%, 0.8)`;
+      // Draw rounded rectangle (with fallback for older browsers)
+      if (typeof ctx.roundRect === 'function') {
+        ctx.beginPath();
+        ctx.roundRect(x, height - barHeight, barWidth, barHeight, [4, 4, 0, 0]);
+        ctx.fill();
+      } else {
         ctx.fillRect(x, height - barHeight, barWidth, barHeight);
-        ctx.shadowBlur = 0;
       }
       
-      x += barWidth + 1;
+      // Reflection
+      const reflectionGradient = ctx.createLinearGradient(x, height, x, height + barHeight * 0.3);
+      reflectionGradient.addColorStop(0, `rgba(168, 85, 247, ${value * 0.3})`);
+      reflectionGradient.addColorStop(1, 'rgba(168, 85, 247, 0)');
+      
+      ctx.fillStyle = reflectionGradient;
+      ctx.shadowBlur = 0;
+      
+      // Draw rounded rectangle (with fallback for older browsers)
+      if (typeof ctx.roundRect === 'function') {
+        ctx.beginPath();
+        ctx.roundRect(x, height + 2, barWidth, barHeight * 0.3, [0, 0, 4, 4]);
+        ctx.fill();
+      } else {
+        ctx.fillRect(x, height + 2, barWidth, barHeight * 0.3);
+      }
     }
+    ctx.shadowBlur = 0;
   };
 
-  const drawWaveform = (ctx: CanvasRenderingContext2D, dataArray: Uint8Array, width: number, height: number) => {
-    ctx.lineWidth = 3;
+  // Wave mode - smooth bezier curves
+  const drawWave = (ctx: CanvasRenderingContext2D, dataArray: Uint8Array, width: number, height: number) => {
+    const colors = [
+      { stroke: '#a855f7', fill: 'rgba(168, 85, 247, 0.2)' },
+      { stroke: '#22d3ee', fill: 'rgba(34, 211, 238, 0.15)' },
+      { stroke: '#f472b6', fill: 'rgba(244, 114, 182, 0.1)' },
+    ];
     
-    // Draw multiple waves with different colors
-    const colors = ['#8b5cf6', '#06b6d4', '#ec4899'];
-    
-    colors.forEach((color, index) => {
-      ctx.strokeStyle = color;
+    colors.forEach((color, layerIndex) => {
+      ctx.strokeStyle = color.stroke;
+      ctx.fillStyle = color.fill;
+      ctx.lineWidth = 3;
       ctx.shadowBlur = 10;
-      ctx.shadowColor = color;
+      ctx.shadowColor = color.stroke;
+      
       ctx.beginPath();
-
+      
+      const points: { x: number; y: number }[] = [];
       const sliceWidth = width / dataArray.length;
-      let x = 0;
-      const offset = index * 20;
-
+      const offset = layerIndex * 30;
+      
       for (let i = 0; i < dataArray.length; i++) {
-        const v = dataArray[i] / 128.0;
-        const y = (v * height) / 2 + offset;
-
-        if (i === 0) {
-          ctx.moveTo(x, y);
-        } else {
-          ctx.lineTo(x, y);
-        }
-
-        x += sliceWidth;
+        const value = dataArray[i] / 255;
+        const x = i * sliceWidth;
+        const y = height / 2 - value * height * 0.3 + offset;
+        points.push({ x, y });
       }
-
-      ctx.lineTo(width, height / 2);
+      
+      // Draw smooth curve using bezier
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let i = 0; i < points.length - 1; i++) {
+        const xc = (points[i].x + points[i + 1].x) / 2;
+        const yc = (points[i].y + points[i + 1].y) / 2;
+        ctx.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
+      }
+      
+      // Fill under the wave
+      ctx.lineTo(width, height);
+      ctx.lineTo(0, height);
+      ctx.closePath();
+      ctx.fill();
+      
+      // Draw the wave line
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let i = 0; i < points.length - 1; i++) {
+        const xc = (points[i].x + points[i + 1].x) / 2;
+        const yc = (points[i].y + points[i + 1].y) / 2;
+        ctx.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
+      }
       ctx.stroke();
     });
     
     ctx.shadowBlur = 0;
   };
 
+  // Circular mode - radial visualizer
   const drawCircular = (ctx: CanvasRenderingContext2D, dataArray: Uint8Array, width: number, height: number) => {
     const centerX = width / 2;
     const centerY = height / 2;
-    const radius = Math.min(width, height) / 3;
+    const radius = Math.min(width, height) / 4;
+    const rotation = Date.now() / 5000; // Slow rotation
 
-    // Draw center glow
+    // Draw center pulsing glow
     const avgValue = dataArray.reduce((a, b) => a + b, 0) / dataArray.length / 255;
-    const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
-    gradient.addColorStop(0, `rgba(139, 92, 246, ${avgValue * 0.5})`);
-    gradient.addColorStop(1, 'rgba(139, 92, 246, 0)');
-    ctx.fillStyle = gradient;
+    const glowGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius * 1.5);
+    glowGradient.addColorStop(0, `rgba(168, 85, 247, ${avgValue * 0.6})`);
+    glowGradient.addColorStop(0.5, `rgba(34, 211, 238, ${avgValue * 0.3})`);
+    glowGradient.addColorStop(1, 'transparent');
+    ctx.fillStyle = glowGradient;
     ctx.beginPath();
-    ctx.arc(centerX, centerY, radius * (1 + avgValue * 0.3), 0, Math.PI * 2);
+    ctx.arc(centerX, centerY, radius * (1.2 + avgValue * 0.3), 0, Math.PI * 2);
     ctx.fill();
 
-    // Draw bars
-    for (let i = 0; i < dataArray.length; i++) {
-      const value = dataArray[i] / 255;
-      const angle = (i / dataArray.length) * Math.PI * 2;
+    // Draw radial bars
+    const barCount = 128;
+    for (let i = 0; i < barCount; i++) {
+      const value = dataArray[Math.floor(i * dataArray.length / barCount)] / 255;
+      const angle = (i / barCount) * Math.PI * 2 + rotation;
       
       const x1 = centerX + Math.cos(angle) * radius;
       const y1 = centerY + Math.sin(angle) * radius;
@@ -259,10 +303,15 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
       const x2 = centerX + Math.cos(angle) * (radius + barLength);
       const y2 = centerY + Math.sin(angle) * (radius + barLength);
 
-      const hue = (i / dataArray.length) * 360;
-      ctx.strokeStyle = `hsla(${hue}, 100%, 60%, ${0.8 + value * 0.2})`;
-      ctx.lineWidth = 3;
-      ctx.shadowBlur = 15;
+      // Gradient color based on position
+      const hue = (i / barCount) * 360;
+      const gradient = ctx.createLinearGradient(x1, y1, x2, y2);
+      gradient.addColorStop(0, `hsla(${hue}, 100%, 70%, 0.5)`);
+      gradient.addColorStop(1, `hsla(${hue}, 100%, 60%, ${0.8 + value * 0.2})`);
+      
+      ctx.strokeStyle = gradient;
+      ctx.lineWidth = 2;
+      ctx.shadowBlur = 10;
       ctx.shadowColor = `hsla(${hue}, 100%, 60%, 0.8)`;
       ctx.beginPath();
       ctx.moveTo(x1, y1);
@@ -272,91 +321,66 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
     ctx.shadowBlur = 0;
   };
 
-  const particlesStore: Array<{ x: number; y: number; vx: number; vy: number; life: number }> = [];
-
-  const drawParticles = (ctx: CanvasRenderingContext2D, dataArray: Uint8Array, width: number, height: number) => {
+  // Galaxy mode - particles reacting to bass
+  const drawGalaxy = (ctx: CanvasRenderingContext2D, dataArray: Uint8Array, width: number, height: number) => {
+    const centerX = width / 2;
+    const centerY = height / 2;
+    
+    // Calculate bass value
     const bassValue = dataArray.slice(0, 10).reduce((a, b) => a + b, 0) / 10 / 255;
     
-    // Add new particles on bass hits
-    if (bassValue > 0.5 && Math.random() > 0.7) {
-      for (let i = 0; i < 5; i++) {
-        particlesStore.push({
-          x: width / 2,
-          y: height / 2,
-          vx: (Math.random() - 0.5) * 10 * bassValue,
-          vy: (Math.random() - 0.5) * 10 * bassValue,
-          life: 1,
-        });
-      }
-    }
-    
     // Update and draw particles
-    for (let i = particlesStore.length - 1; i >= 0; i--) {
-      const p = particlesStore[i];
-      p.x += p.vx;
-      p.y += p.vy;
-      p.life -= 0.01;
+    const particles = particlesRef.current;
+    particles.forEach((p) => {
+      // Rotate particle
+      p.angle += p.speed;
       
-      if (p.life <= 0) {
-        particlesStore.splice(i, 1);
-        continue;
-      }
+      // Bass reaction - expand radius
+      const targetRadius = p.radius * (1 + bassValue * 0.5);
       
-      const size = p.life * 8;
-      const hue = (1 - p.life) * 120 + 240;
-      ctx.fillStyle = `hsla(${hue}, 100%, 60%, ${p.life})`;
-      ctx.shadowBlur = 20;
-      ctx.shadowColor = `hsla(${hue}, 100%, 60%, ${p.life})`;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.shadowBlur = 0;
-
-    // Draw frequency particles
-    const particles = Math.min(dataArray.length, 150);
-    for (let i = 0; i < particles; i++) {
-      const value = dataArray[i] / 255;
-      const x = (i / particles) * width;
-      const y = height / 2 + (Math.random() - 0.5) * value * height * 0.6;
-      const size = value * 8 + 2;
-
-      const hue = (i / particles) * 360;
-      ctx.fillStyle = `hsla(${hue}, 100%, 60%, ${value * 0.8})`;
-      ctx.beginPath();
-      ctx.arc(x, y, size, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  };
-
-  const drawSpectrum = (ctx: CanvasRenderingContext2D, dataArray: Uint8Array, width: number, height: number) => {
-    const barWidth = width / dataArray.length;
-    
-    for (let i = 0; i < dataArray.length; i++) {
-      const value = dataArray[i] / 255;
-      const x = i * barWidth;
-      const barHeight = value * height;
+      const x = centerX + Math.cos(p.angle) * targetRadius;
+      const y = centerY + Math.sin(p.angle) * targetRadius;
       
-      const gradient = ctx.createLinearGradient(x, height, x, height - barHeight);
-      gradient.addColorStop(0, '#8b5cf6');
-      gradient.addColorStop(0.3, '#06b6d4');
-      gradient.addColorStop(0.6, '#ec4899');
-      gradient.addColorStop(1, '#f59e0b');
+      // Draw particle with glow
+      const gradient = ctx.createRadialGradient(x, y, 0, x, y, p.size * (1 + bassValue * 2));
+      gradient.addColorStop(0, `hsla(${p.hue}, 80%, 70%, ${p.opacity})`);
+      gradient.addColorStop(1, `hsla(${p.hue}, 80%, 50%, 0)`);
       
       ctx.fillStyle = gradient;
-      ctx.shadowBlur = 10;
-      ctx.shadowColor = `rgba(139, 92, 246, ${value})`;
-      ctx.fillRect(x, height - barHeight, barWidth - 1, barHeight);
-    }
+      ctx.beginPath();
+      ctx.arc(x, y, p.size * (1 + bassValue * 2), 0, Math.PI * 2);
+      ctx.fill();
+    });
+    
+    // Center glow pulsing with bass
+    const centerGlow = ctx.createRadialGradient(
+      centerX, centerY, 0, 
+      centerX, centerY, 200 * (1 + bassValue)
+    );
+    centerGlow.addColorStop(0, `rgba(168, 85, 247, ${0.5 * bassValue})`);
+    centerGlow.addColorStop(0.4, `rgba(34, 211, 238, ${0.3 * bassValue})`);
+    centerGlow.addColorStop(0.7, `rgba(244, 114, 182, ${0.2 * bassValue})`);
+    centerGlow.addColorStop(1, 'transparent');
+    
+    ctx.fillStyle = centerGlow;
+    ctx.fillRect(0, 0, width, height);
+    
+    // Draw frequency-reactive ring
+    ctx.strokeStyle = `rgba(168, 85, 247, ${bassValue * 0.8})`;
+    ctx.lineWidth = 3;
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = 'rgba(168, 85, 247, 0.8)';
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, 50 + bassValue * 100, 0, Math.PI * 2);
+    ctx.stroke();
     ctx.shadowBlur = 0;
   };
 
   const modes: { id: VisualizerMode; label: string; icon: string }[] = [
-    { id: 'frequency', label: 'Bars', icon: '📊' },
-    { id: 'waveform', label: 'Wave', icon: '〰️' },
+    { id: 'bars', label: 'Bars', icon: '📊' },
+    { id: 'wave', label: 'Wave', icon: '〰️' },
     { id: 'circular', label: 'Circular', icon: '⭕' },
-    { id: 'particles', label: 'Particles', icon: '✨' },
-    { id: 'spectrum', label: 'Spectrum', icon: '🌈' },
+    { id: 'galaxy', label: 'Galaxy', icon: '✨' },
   ];
 
   const toggleFullscreen = () => {
@@ -365,29 +389,34 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
 
   return (
     <motion.div 
-      className={`glass rounded-2xl overflow-hidden transition-all duration-500 ${isFullscreen ? 'fixed inset-4 z-50' : ''}`}
+      className={`relative rounded-2xl overflow-hidden transition-all duration-500 ${
+        isFullscreen ? 'fixed inset-4 z-50' : 'w-full'
+      }`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
     >
-      <div className="p-4 border-b border-white/10 flex justify-between items-center backdrop-blur-xl bg-white/5">
-        <h2 className="text-2xl font-bold gradient-text flex items-center gap-2">
-          🎨 Audio Visualizer
-        </h2>
-        <div className="flex gap-2 items-center flex-wrap">
+      <div className="relative w-full aspect-video max-h-[70vh] rounded-2xl overflow-hidden bg-black/40 backdrop-blur border border-white/5">
+        <canvas
+          ref={canvasRef}
+          className="w-full h-full"
+        />
+        
+        {/* Mode selector floating at bottom */}
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 bg-black/60 backdrop-blur-xl rounded-full px-4 py-2 border border-white/10">
           {modes.map((mode) => (
             <motion.button
               key={mode.id}
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setVisualizerMode(mode.id)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
                 visualizerMode === mode.id 
-                  ? 'bg-primary neon-glow-strong text-white' 
-                  : 'bg-white/5 hover:bg-white/10 text-gray-300'
+                  ? 'bg-white/10 text-white' 
+                  : 'text-gray-400 hover:text-white'
               }`}
             >
-              <span className="flex items-center gap-1">
+              <span className="flex items-center gap-1.5">
                 <span>{mode.icon}</span>
                 <span className="hidden sm:inline">{mode.label}</span>
               </span>
@@ -397,17 +426,13 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
             whileHover={{ scale: 1.05, y: -2 }}
             whileTap={{ scale: 0.95 }}
             onClick={toggleFullscreen}
-            className="px-4 py-2 rounded-lg text-sm font-medium bg-white/5 hover:bg-white/10 transition-all duration-300"
+            className="px-4 py-2 rounded-full text-sm font-medium text-gray-400 hover:text-white transition-all duration-300"
             title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
           >
             {isFullscreen ? '✕' : '⛶'}
           </motion.button>
         </div>
       </div>
-      <canvas
-        ref={canvasRef}
-        className={`w-full bg-gradient-to-b from-dark/80 to-dark/60 ${isFullscreen ? 'h-full' : 'h-[500px]'}`}
-      />
     </motion.div>
   );
 }
