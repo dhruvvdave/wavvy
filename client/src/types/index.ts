@@ -4,7 +4,6 @@ export interface User {
   email: string;
   avatar_url?: string;
   bio?: string;
-  soundcloud_url?: string;
   spotify_url?: string;
   created_at: Date;
 }
@@ -42,7 +41,7 @@ export interface AudioFile {
   filename: string;
   url: string;
   duration: number;
-  source: 'upload' | 'soundcloud' | 'spotify' | 'url';
+  source: 'upload' | 'spotify' | 'url';
   external_id?: string;
   created_at: Date;
 }
@@ -62,16 +61,6 @@ export interface Like {
   beat_id: string;
   user_id: string;
   created_at: Date;
-}
-
-export interface SoundCloudTrack {
-  id: number;
-  title: string;
-  artist: string;
-  artwork_url?: string;
-  duration: number;
-  stream_url?: string;
-  permalink_url: string;
 }
 
 export interface SpotifyTrack {
