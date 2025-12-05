@@ -188,10 +188,14 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
       ctx.shadowBlur = 15;
       ctx.shadowColor = `rgba(168, 85, 247, ${value * 0.8})`;
       
-      // Rounded rectangle for bar
-      ctx.beginPath();
-      ctx.roundRect(x, height - barHeight, barWidth, barHeight, [4, 4, 0, 0]);
-      ctx.fill();
+      // Draw rounded rectangle (with fallback for older browsers)
+      if (typeof ctx.roundRect === 'function') {
+        ctx.beginPath();
+        ctx.roundRect(x, height - barHeight, barWidth, barHeight, [4, 4, 0, 0]);
+        ctx.fill();
+      } else {
+        ctx.fillRect(x, height - barHeight, barWidth, barHeight);
+      }
       
       // Reflection
       const reflectionGradient = ctx.createLinearGradient(x, height, x, height + barHeight * 0.3);
@@ -200,9 +204,15 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
       
       ctx.fillStyle = reflectionGradient;
       ctx.shadowBlur = 0;
-      ctx.beginPath();
-      ctx.roundRect(x, height + 2, barWidth, barHeight * 0.3, [0, 0, 4, 4]);
-      ctx.fill();
+      
+      // Draw rounded rectangle (with fallback for older browsers)
+      if (typeof ctx.roundRect === 'function') {
+        ctx.beginPath();
+        ctx.roundRect(x, height + 2, barWidth, barHeight * 0.3, [0, 0, 4, 4]);
+        ctx.fill();
+      } else {
+        ctx.fillRect(x, height + 2, barWidth, barHeight * 0.3);
+      }
     }
     ctx.shadowBlur = 0;
   };
