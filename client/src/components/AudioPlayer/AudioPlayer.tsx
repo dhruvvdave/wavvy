@@ -8,9 +8,9 @@ interface AudioPlayerProps {
 
 export default function AudioPlayer({ onAudioElement }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
-  const [currentTrack, setCurrentTrack] = useState<string | null>(null);
+  const [currentTrack, setCurrentTrackLocal] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const { isPlaying, currentTime, duration, volume, setIsPlaying, setCurrentTime, setDuration, setVolume } = useAudioStore();
+  const { isPlaying, currentTime, duration, volume, setIsPlaying, setCurrentTime, setDuration, setVolume, setCurrentTrack } = useAudioStore();
 
   useEffect(() => {
     if (audioRef.current && onAudioElement) {
@@ -35,7 +35,7 @@ export default function AudioPlayer({ onAudioElement }: AudioPlayerProps) {
       audio.removeEventListener('durationchange', handleDurationChange);
       audio.removeEventListener('ended', handleEnded);
     };
-  }, []);
+  }, [setCurrentTime, setDuration, setIsPlaying]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -74,7 +74,14 @@ export default function AudioPlayer({ onAudioElement }: AudioPlayerProps) {
     if (file && audioRef.current) {
       const url = URL.createObjectURL(file);
       audioRef.current.src = url;
-      setCurrentTrack(file.name);
+      setCurrentTrackLocal(file.name);
+      
+      // Update track metadata in store
+      setCurrentTrack({
+        title: file.name.replace(/\.[^/.]+$/, ''), // Remove extension
+        artist: 'Local File',
+        albumArt: undefined,
+      });
     }
   };
 
@@ -160,8 +167,9 @@ export default function AudioPlayer({ onAudioElement }: AudioPlayerProps) {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => {
-                setCurrentTrack(null);
+                setCurrentTrackLocal(null);
                 setIsPlaying(false);
+                setCurrentTrack(null);
                 if (audioRef.current) {
                   audioRef.current.src = '';
                 }
