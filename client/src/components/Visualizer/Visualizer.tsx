@@ -28,6 +28,13 @@ interface FireworkParticle {
   hue: number;
 }
 
+// Type extensions for browser compatibility
+interface HTMLAudioElementExtended {
+  preservesPitch?: boolean;
+  mozPreservesPitch?: boolean;
+  webkitPreservesPitch?: boolean;
+}
+
 export default function Visualizer({ audioElement }: VisualizerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
@@ -81,18 +88,12 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
     if (!audioElement || !canvasRef.current) return;
 
     // Enable preservesPitch for better audio quality
-    interface HTMLAudioElementWithPreservesPitch extends HTMLAudioElement {
-      preservesPitch?: boolean;
-      mozPreservesPitch?: boolean;
-      webkitPreservesPitch?: boolean;
-    }
-    
-    const audioEl = audioElement as HTMLAudioElementWithPreservesPitch;
-    if ('preservesPitch' in audioEl) {
+    const audioEl = audioElement as unknown as HTMLAudioElement & HTMLAudioElementExtended;
+    if ('preservesPitch' in audioElement) {
       audioEl.preservesPitch = true;
-    } else if ('mozPreservesPitch' in audioEl) {
+    } else if ('mozPreservesPitch' in audioElement) {
       audioEl.mozPreservesPitch = true;
-    } else if ('webkitPreservesPitch' in audioEl) {
+    } else if ('webkitPreservesPitch' in audioElement) {
       audioEl.webkitPreservesPitch = true;
     }
 
@@ -194,14 +195,10 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
       
       ctx.fillStyle = gradient;
       
-      interface CanvasRenderingContext2DWithRoundRect extends CanvasRenderingContext2D {
-        roundRect?: (x: number, y: number, width: number, height: number, radii: number[]) => void;
-      }
-      
-      const ctxWithRoundRect = ctx as CanvasRenderingContext2DWithRoundRect;
-      if (typeof ctxWithRoundRect.roundRect === 'function') {
+      // Use roundRect if available for rounded corners
+      if (typeof ctx.roundRect === 'function') {
         ctx.beginPath();
-        ctxWithRoundRect.roundRect(x, height - barHeight, barWidth, barHeight, [4, 4, 0, 0]);
+        ctx.roundRect(x, height - barHeight, barWidth, barHeight, [4, 4, 0, 0]);
         ctx.fill();
       } else {
         ctx.fillRect(x, height - barHeight, barWidth, barHeight);
@@ -213,9 +210,9 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
       
       ctx.fillStyle = reflectionGradient;
       
-      if (typeof ctxWithRoundRect.roundRect === 'function') {
+      if (typeof ctx.roundRect === 'function') {
         ctx.beginPath();
-        ctxWithRoundRect.roundRect(x, height + 2, barWidth, barHeight * 0.3, [0, 0, 4, 4]);
+        ctx.roundRect(x, height + 2, barWidth, barHeight * 0.3, [0, 0, 4, 4]);
         ctx.fill();
       } else {
         ctx.fillRect(x, height + 2, barWidth, barHeight * 0.3);
@@ -564,10 +561,10 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
     };
     resize();
     
-    let resizeTimeout: number;
+    let resizeTimeout: ReturnType<typeof setTimeout>;
     const handleResize = () => {
       clearTimeout(resizeTimeout);
-      resizeTimeout = window.setTimeout(resize, 100) as unknown as number;
+      resizeTimeout = setTimeout(resize, 100);
     };
     
     window.addEventListener('resize', handleResize);
