@@ -329,7 +329,7 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
             className="px-4 py-2 rounded-lg text-sm font-medium bg-white/5 hover:bg-white/10 transition-all duration-300"
             title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
           >
-            {isFullscreen ? '⛶' : '⛶'}
+            {isFullscreen ? '✕' : '⛶'}
           </motion.button>
         </div>
       </div>

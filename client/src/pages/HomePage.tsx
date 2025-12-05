@@ -6,6 +6,7 @@ import Visualizer from '../components/Visualizer/Visualizer';
 import AudioPlayer from '../components/AudioPlayer/AudioPlayer';
 import DirectURLPlayer from '../components/UI/DirectURLPlayer';
 
+// Audio source tabs (sequencer tab removed as beat creation is always visible below)
 type AudioSourceTab = 'upload' | 'spotify' | 'url';
 
 export default function HomePage() {

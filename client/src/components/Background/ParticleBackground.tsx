@@ -65,7 +65,8 @@ export default function ParticleBackground() {
     }
 
     const particles: Particle[] = [];
-    const particleCount = 100;
+    // Responsive particle count based on screen size
+    const particleCount = Math.min(100, Math.floor((canvas.width * canvas.height) / 20000));
 
     for (let i = 0; i < particleCount; i++) {
       particles.push(new Particle());

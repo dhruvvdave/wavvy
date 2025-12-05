@@ -83,9 +83,12 @@ export default function MelodyPads() {
       }
       setActivePad(noteBase);
       
-      // Add ripple effect
+      // Add ripple effect - limit to 3 concurrent ripples to prevent memory issues
       const rippleId = `${noteBase}-${Date.now()}`;
-      setRipples(prev => [...prev, { id: rippleId, note: noteBase }]);
+      setRipples(prev => {
+        const newRipples = [...prev, { id: rippleId, note: noteBase }];
+        return newRipples.slice(-3); // Keep only last 3 ripples
+      });
       
       setTimeout(() => setActivePad(null), 300);
       setTimeout(() => {
