@@ -47,43 +47,55 @@ export default function DirectURLPlayer({ onUrlLoaded }: DirectURLPlayerProps) {
   };
 
   return (
-    <div className="glass p-6 rounded-xl">
-      <h2 className="text-2xl font-bold gradient-text mb-4">🔗 Direct URL Audio</h2>
+    <div className="glass p-6 rounded-2xl gradient-border">
+      <h2 className="text-3xl font-bold gradient-text mb-6">🔗 Direct URL Audio</h2>
 
       <div className="space-y-4">
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           <input
             type="url"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && loadUrl()}
             placeholder="Paste audio file URL (e.g., https://example.com/audio.mp3)"
-            className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2 focus:outline-none focus:border-primary"
+            className="flex-1 bg-white/5 border-2 border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary transition-all duration-300 placeholder:text-gray-600"
           />
           <motion.button
-            whileHover={{ scale: 1.05 }}
+            whileHover={{ scale: 1.05, y: -2 }}
             whileTap={{ scale: 0.95 }}
             onClick={loadUrl}
             disabled={loading || !url}
-            className="btn-primary disabled:opacity-50"
+            className={`px-8 py-3 rounded-xl font-medium transition-all duration-300 ${
+              loading || !url
+                ? 'bg-white/5 text-gray-500 cursor-not-allowed'
+                : 'bg-primary neon-glow-strong text-white'
+            }`}
           >
             {loading ? '🔄 Loading...' : '▶ Load'}
           </motion.button>
         </div>
 
         {error && (
-          <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-sm text-red-400">
-            {error}
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-red-500/10 border-2 border-red-500/30 rounded-xl p-4 text-sm text-red-400 shadow-[0_0_20px_rgba(239,68,68,0.1)]"
+          >
+            <span className="font-bold">⚠️ Error:</span> {error}
+          </motion.div>
         )}
 
-        <div className="text-sm text-gray-500">
-          <p className="mb-2">Supported formats: MP3, WAV, OGG, M4A</p>
-          <p>Example URLs:</p>
-          <ul className="list-disc list-inside ml-2 text-xs">
-            <li>https://example.com/song.mp3</li>
-            <li>https://cdn.example.com/audio/track.wav</li>
-          </ul>
+        <div className="glass p-4 rounded-xl text-sm text-gray-400 space-y-3">
+          <div>
+            <span className="text-primary font-bold">Supported formats:</span> MP3, WAV, OGG, M4A
+          </div>
+          <div>
+            <p className="text-gray-500 mb-2">Example URLs:</p>
+            <ul className="space-y-1 text-xs text-gray-600 ml-4">
+              <li>• https://example.com/song.mp3</li>
+              <li>• https://cdn.example.com/audio/track.wav</li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>
