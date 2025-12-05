@@ -3,9 +3,21 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --bg-primary: #0a0a0f;
+    --bg-secondary: #12121a;
+    --bg-card: rgba(255, 255, 255, 0.03);
+    --accent-purple: #8b5cf6;
+    --accent-cyan: #06b6d4;
+    --accent-pink: #ec4899;
+    --accent-green: #22c55e;
+    --text-primary: #ffffff;
+    --text-secondary: #a1a1aa;
+  }
+
   body {
     @apply bg-dark text-white overflow-x-hidden;
-    background: linear-gradient(135deg, #030014 0%, #0a0a1f 50%, #1a0a2e 100%);
+    background: linear-gradient(135deg, var(--bg-primary) 0%, #0a0a1f 50%, #1a0a2e 100%);
     background-attachment: fixed;
   }
 }

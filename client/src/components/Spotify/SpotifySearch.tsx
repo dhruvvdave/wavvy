@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 interface SpotifyTrack {
   id: string;
   name: string;
@@ -25,14 +27,14 @@ export default function SpotifySearch() {
     
     setLoading(true);
     try {
-      // Note: This requires Spotify API credentials
-      // For now, this is a placeholder implementation
-      const response = await axios.get('/api/spotify/search', {
+      const response = await axios.get(`${API_URL}/api/spotify/search`, {
         params: { q: query, type: 'track' }
       });
       setTracks(response.data.tracks?.items || []);
     } catch (error) {
       console.error('Error searching Spotify:', error);
+      // Show helpful error message to user
+      alert('Spotify API is not configured. Please add your Spotify credentials to the server.');
     } finally {
       setLoading(false);
     }
