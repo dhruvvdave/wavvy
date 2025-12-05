@@ -1,0 +1,92 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String    @id @default(uuid())
+  username       String    @unique
+  email          String    @unique
+  password_hash  String
+  avatar_url     String?
+  bio            String?
+  soundcloud_url String?
+  spotify_url    String?
+  created_at     DateTime  @default(now())
+  
+  beats          Beat[]
+  comments       Comment[]
+  likes          Like[]
+  audio_files    AudioFile[]
+  favorites      Favorite[]
+}
+
+model Beat {
+  id            String   @id @default(uuid())
+  user_id       String
+  title         String
+  description   String?
+  bpm           Int
+  pattern_data  Json
+  audio_url     String?
+  plays         Int      @default(0)
+  created_at    DateTime @default(now())
+  
+  user          User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  comments      Comment[]
+  likes         Like[]
+}
+
+model Comment {
+  id                String   @id @default(uuid())
+  beat_id           String
+  user_id           String
+  content           String
+  timestamp_seconds Float?
+  created_at        DateTime @default(now())
+  
+  beat              Beat     @relation(fields: [beat_id], references: [id], onDelete: Cascade)
+  user              User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model Like {
+  id         String   @id @default(uuid())
+  beat_id    String
+  user_id    String
+  created_at DateTime @default(now())
+  
+  beat       Beat     @relation(fields: [beat_id], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  
+  @@unique([beat_id, user_id])
+}
+
+model AudioFile {
+  id          String   @id @default(uuid())
+  user_id     String
+  filename    String
+  url         String
+  duration    Float
+  source      String
+  external_id String?
+  created_at  DateTime @default(now())
+  
+  user        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model Favorite {
+  id          String   @id @default(uuid())
+  user_id     String
+  track_type  String
+  external_id String
+  track_data  Json
+  created_at  DateTime @default(now())
+  
+  user        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  
+  @@unique([user_id, track_type, external_id])
+}
