@@ -11,3 +11,6 @@ coverage/
 uploads/
 *.db
 .prisma/
+client/dist/
+server/dist/
+*.tsbuildinfo
