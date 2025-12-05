@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
+import * as Tone from 'tone';
 import { useAudioStore } from '../../stores/audioStore';
 import { VisualizerMode } from '../../types';
 
@@ -12,7 +13,19 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
   const animationRef = useRef<number>();
   const { visualizerMode, setVisualizerMode, audioContext, analyser, setAudioContext, setAnalyser } = useAudioStore();
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const toneAnalyserRef = useRef<Tone.Analyser | null>(null);
+  const externalAnalyserRef = useRef<AnalyserNode | null>(null);
 
+  // Connect to Tone.js master output for sequencer visualization
+  useEffect(() => {
+    if (!toneAnalyserRef.current) {
+      const analyser = new Tone.Analyser('fft', 256);
+      Tone.getDestination().connect(analyser);
+      toneAnalyserRef.current = analyser;
+    }
+  }, []);
+
+  // Handle external audio elements
   useEffect(() => {
     if (!audioElement || !canvasRef.current) return;
 
@@ -29,6 +42,7 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
       analyzerNode.fftSize = 2048;
       analyzerNode.smoothingTimeConstant = 0.8;
       setAnalyser(analyzerNode);
+      externalAnalyserRef.current = analyzerNode;
 
       try {
         const source = context.createMediaElementSource(audioElement);
@@ -38,11 +52,14 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
         console.debug('Audio source already connected:', error);
       }
     }
+  }, [audioElement, audioContext, analyser, setAudioContext, setAnalyser]);
 
+  // Main draw loop
+  useEffect(() => {
     const canvas = canvasRef.current;
+    if (!canvas) return;
+
     const ctx = canvas.getContext('2d')!;
-    const bufferLength = analyzerNode.frequencyBinCount;
-    const dataArray = new Uint8Array(bufferLength);
 
     const resize = () => {
       canvas.width = canvas.offsetWidth;
@@ -54,9 +71,35 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
     const draw = () => {
       animationRef.current = requestAnimationFrame(draw);
       
-      if (!analyzerNode) return;
-      
-      analyzerNode.getByteFrequencyData(dataArray);
+      // Try to get data from either Tone.js or external analyser
+      let dataArray: Uint8Array;
+      let hasAudio = false;
+
+      // Prefer external audio element if available and playing
+      if (externalAnalyserRef.current && audioElement && !audioElement.paused) {
+        const bufferLength = externalAnalyserRef.current.frequencyBinCount;
+        const tempArray = new Uint8Array(bufferLength);
+        externalAnalyserRef.current.getByteFrequencyData(tempArray);
+        dataArray = tempArray;
+        hasAudio = dataArray.some(val => val > 0);
+      } 
+      // Otherwise use Tone.js analyser
+      else if (toneAnalyserRef.current) {
+        const values = toneAnalyserRef.current.getValue();
+        const isArray = Array.isArray(values);
+        dataArray = new Uint8Array(values.length);
+        
+        // Convert from dB (-100 to 0) to 0-255
+        for (let i = 0; i < values.length; i++) {
+          const val = isArray ? values[i] : 0;
+          const numVal = typeof val === 'number' ? val : 0;
+          dataArray[i] = Math.max(0, Math.min(255, (numVal + 100) * 2.55));
+        }
+        hasAudio = dataArray.some(val => val > 5);
+      } else {
+        // Fallback to empty data
+        dataArray = new Uint8Array(256).fill(0);
+      }
 
       // Enhanced background with gradient
       const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
@@ -65,22 +108,27 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      switch (visualizerMode) {
-        case 'frequency':
-          drawFrequencyBars(ctx, dataArray, canvas.width, canvas.height);
-          break;
-        case 'waveform':
-          drawWaveform(ctx, analyzerNode, canvas.width, canvas.height);
-          break;
-        case 'circular':
-          drawCircular(ctx, dataArray, canvas.width, canvas.height);
-          break;
-        case 'particles':
-          drawParticles(ctx, dataArray, canvas.width, canvas.height);
-          break;
-        case 'spectrum':
-          drawSpectrum(ctx, dataArray, canvas.width, canvas.height);
-          break;
+      // If no audio, show idle animation
+      if (!hasAudio) {
+        drawIdleAnimation(ctx, canvas.width, canvas.height);
+      } else {
+        switch (visualizerMode) {
+          case 'frequency':
+            drawFrequencyBars(ctx, dataArray, canvas.width, canvas.height);
+            break;
+          case 'waveform':
+            drawWaveform(ctx, dataArray, canvas.width, canvas.height);
+            break;
+          case 'circular':
+            drawCircular(ctx, dataArray, canvas.width, canvas.height);
+            break;
+          case 'particles':
+            drawParticles(ctx, dataArray, canvas.width, canvas.height);
+            break;
+          case 'spectrum':
+            drawSpectrum(ctx, dataArray, canvas.width, canvas.height);
+            break;
+        }
       }
     };
 
@@ -92,7 +140,34 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [audioElement, visualizerMode, audioContext, analyser]);
+  }, [visualizerMode, audioElement]);
+
+  const drawIdleAnimation = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
+    const time = Date.now() / 1000;
+    const centerX = width / 2;
+    const centerY = height / 2;
+    
+    // Draw pulsing rings
+    for (let i = 0; i < 3; i++) {
+      const radius = 50 + i * 40 + Math.sin(time * 2 + i) * 20;
+      const alpha = 0.3 - i * 0.1;
+      
+      ctx.strokeStyle = `rgba(139, 92, 246, ${alpha})`;
+      ctx.lineWidth = 2;
+      ctx.shadowBlur = 20;
+      ctx.shadowColor = 'rgba(139, 92, 246, 0.5)';
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    
+    // Draw floating text
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.font = '20px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Waiting for audio...', centerX, centerY);
+  };
 
   const drawFrequencyBars = (ctx: CanvasRenderingContext2D, dataArray: Uint8Array, width: number, height: number) => {
     const barWidth = (width / dataArray.length) * 2.5;
@@ -122,11 +197,7 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
     }
   };
 
-  const drawWaveform = (ctx: CanvasRenderingContext2D, analyzerNode: AnalyserNode, width: number, height: number) => {
-    const bufferLength = analyzerNode.fftSize;
-    const dataArray = new Uint8Array(bufferLength);
-    analyzerNode.getByteTimeDomainData(dataArray);
-
+  const drawWaveform = (ctx: CanvasRenderingContext2D, dataArray: Uint8Array, width: number, height: number) => {
     ctx.lineWidth = 3;
     
     // Draw multiple waves with different colors
@@ -138,11 +209,11 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
       ctx.shadowColor = color;
       ctx.beginPath();
 
-      const sliceWidth = width / bufferLength;
+      const sliceWidth = width / dataArray.length;
       let x = 0;
       const offset = index * 20;
 
-      for (let i = 0; i < bufferLength; i++) {
+      for (let i = 0; i < dataArray.length; i++) {
         const v = dataArray[i] / 128.0;
         const y = (v * height) / 2 + offset;
 

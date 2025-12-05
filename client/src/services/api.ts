@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { Beat, PatternData } from '../types';
 
-const API_URL = '/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 export const beatsService = {
   // Get all beats

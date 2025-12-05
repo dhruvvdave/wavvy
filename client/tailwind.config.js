@@ -11,7 +11,8 @@ export default {
         secondary: '#06b6d4',
         accent: '#ec4899',
         spotify: '#1db954',
-        dark: '#030014',
+        dark: '#0a0a0f',
+        'bg-secondary': '#12121a',
       },
       animation: {
         'glow': 'glow 2s ease-in-out infinite',

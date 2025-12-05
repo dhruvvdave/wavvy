@@ -45,8 +45,30 @@ export default function Sequencer() {
   const [volumes, setVolumes] = useState<number[]>(TRACKS.map(() => 0.7));
   const [muted, setMuted] = useState<boolean[]>(TRACKS.map(() => false));
   const [solo, setSolo] = useState<boolean[]>(TRACKS.map(() => false));
-  const [sequence, setSequence] = useState<Tone.Sequence | null>(null);
+  const [audioStarted, setAudioStarted] = useState(false);
   const synthsRef = useRef<any[]>([]);
+  const sequenceRef = useRef<Tone.Sequence | null>(null);
+  const patternRef = useRef(pattern);
+  const mutedRef = useRef(muted);
+  const soloRef = useRef(solo);
+  const volumesRef = useRef(volumes);
+
+  // Update refs when state changes
+  useEffect(() => {
+    patternRef.current = pattern;
+  }, [pattern]);
+
+  useEffect(() => {
+    mutedRef.current = muted;
+  }, [muted]);
+
+  useEffect(() => {
+    soloRef.current = solo;
+  }, [solo]);
+
+  useEffect(() => {
+    volumesRef.current = volumes;
+  }, [volumes]);
 
   // Initialize Tone.js synthesized drums
   useEffect(() => {
@@ -107,19 +129,24 @@ export default function Sequencer() {
     };
   }, []);
 
-  // Set up sequencer
+  // Set up sequencer ONCE - read from refs to avoid recreating
   useEffect(() => {
     if (synthsRef.current.length === 0) return;
 
     const seq = new Tone.Sequence(
       (time, step) => {
         setCurrentStep(step);
-        pattern.forEach((trackPattern, trackIndex) => {
-          if (trackPattern[step] && !muted[trackIndex]) {
-            const anySolo = solo.some((s) => s);
-            if (!anySolo || solo[trackIndex]) {
+        const currentPattern = patternRef.current;
+        const currentMuted = mutedRef.current;
+        const currentSolo = soloRef.current;
+        const currentVolumes = volumesRef.current;
+
+        currentPattern.forEach((trackPattern, trackIndex) => {
+          if (trackPattern[step] && !currentMuted[trackIndex]) {
+            const anySolo = currentSolo.some((s) => s);
+            if (!anySolo || currentSolo[trackIndex]) {
               const synth = synthsRef.current[trackIndex];
-              synth.volume.value = Tone.gainToDb(volumes[trackIndex]);
+              synth.volume.value = Tone.gainToDb(currentVolumes[trackIndex]);
               
               // Trigger different notes for different drums
               if (trackIndex === 0 || trackIndex === 3 || trackIndex === 6) {
@@ -141,12 +168,12 @@ export default function Sequencer() {
       '16n'
     );
 
-    setSequence(seq);
+    sequenceRef.current = seq;
 
     return () => {
       seq.dispose();
     };
-  }, [pattern, muted, solo, volumes]);
+  }, []); // Empty deps - only create once!
 
   // Update BPM
   useEffect(() => {
@@ -155,15 +182,22 @@ export default function Sequencer() {
 
   const togglePlay = async () => {
     await Tone.start();
+    setAudioStarted(true);
+    
     if (isPlaying) {
       Tone.getTransport().stop();
       setIsPlaying(false);
       setCurrentStep(-1);
     } else {
-      sequence?.start(0);
+      sequenceRef.current?.start(0);
       Tone.getTransport().start();
       setIsPlaying(true);
     }
+  };
+
+  const startAudio = async () => {
+    await Tone.start();
+    setAudioStarted(true);
   };
 
   const toggleStep = (trackIndex: number, stepIndex: number) => {
@@ -199,7 +233,21 @@ export default function Sequencer() {
   };
 
   return (
-    <div className="glass p-6 rounded-2xl gradient-border">
+    <>
+      {!audioStarted && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={startAudio}
+            className="glass px-12 py-6 rounded-2xl text-2xl font-bold neon-glow-strong gradient-text"
+          >
+            🎵 Click to Enable Audio
+          </motion.button>
+        </div>
+      )}
+      
+      <div className="glass p-6 rounded-2xl gradient-border">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <h2 className="text-3xl font-bold gradient-text">🥁 Beat Sequencer</h2>
         
@@ -337,5 +385,6 @@ export default function Sequencer() {
         Click pads to create beats • All sounds synthesized with Tone.js
       </div>
     </div>
+    </>
   );
 }
