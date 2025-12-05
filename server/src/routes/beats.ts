@@ -2,8 +2,21 @@ import { Router } from 'express';
 
 const router = Router();
 
+interface Beat {
+  id: string;
+  user_id: string;
+  title: string;
+  description?: string;
+  bpm: number;
+  pattern_data: any;
+  audio_url?: string;
+  plays: number;
+  created_at: Date;
+  updated_at?: Date;
+}
+
 // Mock beats storage (replace with Prisma in production)
-const beats: any[] = [];
+const beats: Beat[] = [];
 
 router.get('/', (req, res) => {
   res.json({ beats });

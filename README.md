@@ -89,6 +89,13 @@ Framework built for:
 - PostgreSQL 14+
 - npm or yarn
 
+### ⚠️ Important Security Notes
+
+1. **JWT Secret**: The application will not start without a valid `JWT_SECRET` environment variable
+2. **File Uploads**: Currently using Multer 1.4.5-lts (consider upgrading to 2.x for production)
+3. **Database**: Mock in-memory storage is used by default. Configure Prisma for production.
+4. **API Keys**: External API integrations (SoundCloud, Spotify) require valid credentials
+
 ### 1. Clone the Repository
 ```bash
 git clone https://github.com/dhruvvdave/wavvy.git

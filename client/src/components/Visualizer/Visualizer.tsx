@@ -28,9 +28,15 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
       analyzerNode.fftSize = 2048;
       setAnalyser(analyzerNode);
 
-      const source = context.createMediaElementSource(audioElement);
-      source.connect(analyzerNode);
-      analyzerNode.connect(context.destination);
+      // Only create source if it doesn't exist
+      try {
+        const source = context.createMediaElementSource(audioElement);
+        source.connect(analyzerNode);
+        analyzerNode.connect(context.destination);
+      } catch (error) {
+        // Source already exists, which is fine
+        console.debug('Audio source already connected:', error);
+      }
     }
 
     const canvas = canvasRef.current;

@@ -68,9 +68,17 @@ router.post('/login', async (req, res) => {
     }
 
     // Generate token
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      return res.status(500).json({ 
+        error: 'Server configuration error',
+        message: 'JWT_SECRET must be configured in environment variables'
+      });
+    }
+    
     const token = jwt.sign(
       { id: user.id, email: user.email },
-      process.env.JWT_SECRET || 'default-secret',
+      jwtSecret,
       { expiresIn: '7d' }
     );
 
