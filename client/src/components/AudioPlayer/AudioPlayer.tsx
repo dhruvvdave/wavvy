@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { useAudioStore } from '../../stores/audioStore';
 
 interface AudioPlayerProps {
@@ -119,7 +118,7 @@ export default function AudioPlayer({ onAudioElement }: AudioPlayerProps) {
       <audio ref={audioRef} />
 
       {!currentTrack ? (
-        <motion.div
+        <div
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
@@ -130,12 +129,8 @@ export default function AudioPlayer({ onAudioElement }: AudioPlayerProps) {
               : 'border-white/20 hover:border-primary/50 hover:bg-white/5'
             }
           `}
-          whileHover={{ scale: 1.02 }}
         >
-          <motion.div
-            animate={{ y: isDragging ? -10 : 0 }}
-            transition={{ duration: 0.3 }}
-          >
+          <div className={`transition-transform duration-300 ${isDragging ? '-translate-y-2' : ''}`}>
             <div className="text-6xl mb-4">🎵</div>
             <h3 className="text-xl font-bold mb-2">Drop your audio file here</h3>
             <p className="text-gray-400 mb-6">or click to browse</p>
@@ -151,8 +146,8 @@ export default function AudioPlayer({ onAudioElement }: AudioPlayerProps) {
             <p className="text-xs text-gray-500 mt-4">
               Supports MP3, WAV, OGG, M4A
             </p>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       ) : (
         <div className="space-y-6">
           <div className="flex items-center gap-4 glass p-4 rounded-xl">
@@ -163,9 +158,7 @@ export default function AudioPlayer({ onAudioElement }: AudioPlayerProps) {
               <h3 className="font-semibold truncate text-lg">{currentTrack}</h3>
               <p className="text-sm text-gray-400">Now Playing</p>
             </div>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+            <button
               onClick={() => {
                 setCurrentTrackLocal(null);
                 setIsPlaying(false);
@@ -177,18 +170,16 @@ export default function AudioPlayer({ onAudioElement }: AudioPlayerProps) {
               className="text-gray-400 hover:text-red-400 transition-colors"
             >
               ✕
-            </motion.button>
+            </button>
           </div>
 
           <div className="flex items-center gap-4">
-            <motion.button
-              whileHover={{ scale: 1.1, rotate: 5 }}
-              whileTap={{ scale: 0.9 }}
+            <button
               onClick={togglePlay}
-              className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-secondary neon-glow-strong flex items-center justify-center text-2xl font-bold shadow-lg"
+              className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-secondary neon-glow-strong flex items-center justify-center text-2xl font-bold shadow-lg hover:scale-110 active:scale-90 transition-transform"
             >
               {isPlaying ? '⏸' : '▶'}
-            </motion.button>
+            </button>
 
             <div className="flex-1 space-y-2">
               <div className="relative">
@@ -212,14 +203,12 @@ export default function AudioPlayer({ onAudioElement }: AudioPlayerProps) {
             </div>
 
             <div className="flex items-center gap-3 glass px-4 py-3 rounded-lg">
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
+              <button
                 onClick={() => setVolume(volume > 0 ? 0 : 0.7)}
-                className="text-xl"
+                className="text-xl hover:scale-110 active:scale-90 transition-transform"
               >
                 {volume === 0 ? '🔇' : volume < 0.5 ? '🔉' : '🔊'}
-              </motion.button>
+              </button>
               <input
                 type="range"
                 min="0"

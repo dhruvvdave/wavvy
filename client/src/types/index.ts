@@ -76,7 +76,7 @@ export interface SpotifyTrack {
   external_urls: { spotify: string };
 }
 
-export type VisualizerMode = 'bars' | 'wave' | 'circular' | 'galaxy';
+export type VisualizerMode = 'bars' | 'wave' | 'circular' | 'galaxy' | 'dna' | 'fireworks' | 'matrix' | 'rings' | 'mountains' | 'blob';
 
 export interface InstrumentType {
   id: string;
