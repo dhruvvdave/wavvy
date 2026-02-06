@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -9,11 +8,9 @@ interface SpotifyTrack {
   name: string;
   artists: { name: string }[];
   album: {
-    name: string;
     images: { url: string }[];
   };
   duration_ms: number;
-  preview_url?: string;
   external_urls: { spotify: string };
 }
 
@@ -25,17 +22,16 @@ export default function SpotifySearch() {
 
   const searchTracks = async () => {
     if (!query) return;
-    
+
     setLoading(true);
     setError(null);
     try {
       const response = await axios.get(`${API_URL}/api/spotify/search`, {
-        params: { q: query, type: 'track' }
+        params: { q: query, type: 'track' },
       });
       setTracks(response.data.tracks?.items || []);
-    } catch (err) {
-      console.error('Error searching Spotify:', err);
-      setError('Spotify API is not configured. Please add your Spotify credentials to the server.');
+    } catch {
+      setError('Spotify API is not configured.');
       setTracks([]);
     } finally {
       setLoading(false);
@@ -49,97 +45,51 @@ export default function SpotifySearch() {
   };
 
   return (
-    <div className="glass p-6 rounded-xl">
-      <h2 className="text-2xl font-bold mb-4">
-        <span className="gradient-text">🟢 Spotify</span>
-      </h2>
+    <div className="rounded-xl border border-white/10 bg-black/30 p-5">
+      <h2 className="text-lg font-medium text-white">Spotify search</h2>
 
-      <div className="flex gap-2 mb-6">
+      <div className="mt-4 flex gap-2">
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          onKeyPress={(e) => e.key === 'Enter' && searchTracks()}
-          placeholder="Search for tracks..."
-          className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2 focus:outline-none focus:border-spotify"
+          onKeyDown={(e) => e.key === 'Enter' && searchTracks()}
+          placeholder="Search"
+          className="flex-1 rounded-md border border-white/15 bg-black/25 px-3 py-2 text-sm text-white placeholder:text-white/35 focus:outline-none focus:border-white/30"
         />
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+        <button
           onClick={searchTracks}
-          className="btn-primary bg-spotify/20"
-          disabled={loading}
+          disabled={loading || !query}
+          className="rounded-md border border-white/20 bg-white/10 hover:bg-white/20 px-3 py-2 text-sm text-white disabled:opacity-50"
         >
-          {loading ? '🔄' : '🔍'} Search
-        </motion.button>
+          {loading ? '...' : 'Go'}
+        </button>
       </div>
 
-      {error && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="glass p-4 rounded-lg border-l-4 border-red-500 bg-red-500/10"
-        >
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">⚠️</span>
-            <div>
-              <h4 className="font-semibold text-red-400 mb-1">Configuration Required</h4>
-              <p className="text-sm text-gray-300">{error}</p>
-            </div>
-          </div>
-        </motion.div>
-      )}
+      {error && <p className="mt-3 text-xs text-white/55">{error}</p>}
 
-      <div className="space-y-3 max-h-96 overflow-y-auto">
+      <div className="mt-4 space-y-2 max-h-80 overflow-y-auto pr-1">
         {tracks.map((track) => (
-          <motion.div
-            key={track.id}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="glass p-4 rounded-lg flex items-center gap-4 hover:bg-white/10 transition-all"
-          >
-            {track.album.images[2] && (
-              <img
-                src={track.album.images[2].url}
-                alt={track.name}
-                className="w-12 h-12 rounded"
-              />
-            )}
+          <div key={track.id} className="rounded-lg border border-white/10 bg-black/25 p-2.5 flex items-center gap-3">
+            {track.album.images[2] && <img src={track.album.images[2].url} alt={track.name} className="w-10 h-10 rounded" />}
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold truncate">{track.name}</h3>
-              <p className="text-sm text-gray-400 truncate">
-                {track.artists.map(a => a.name).join(', ')}
-              </p>
+              <p className="text-sm text-white truncate">{track.name}</p>
+              <p className="text-xs text-white/50 truncate">{track.artists.map((a) => a.name).join(', ')}</p>
             </div>
-            <div className="text-sm text-gray-400">
-              {formatDuration(track.duration_ms)}
-            </div>
-            {track.preview_url && (
-              <button className="btn-primary text-xs bg-spotify/20">
-                ▶ Preview
-              </button>
-            )}
+            <span className="text-xs text-white/45">{formatDuration(track.duration_ms)}</span>
             <a
               href={track.external_urls.spotify}
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-primary text-xs bg-spotify/20"
+              className="text-xs rounded border border-white/20 px-2 py-1 hover:bg-white/10"
             >
               Open
             </a>
-          </motion.div>
+          </div>
         ))}
       </div>
 
-      {tracks.length === 0 && !loading && !error && (
-        <div className="text-center text-gray-500 py-8">
-          Search for tracks on Spotify
-        </div>
-      )}
-      
-      <div className="mt-4 text-xs text-gray-500 text-center">
-        Note: Only 30-second previews available via API
-      </div>
+      {tracks.length === 0 && !loading && !error && <p className="text-xs text-white/40 mt-4">No results</p>}
     </div>
   );
 }
