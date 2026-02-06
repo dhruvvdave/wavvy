@@ -14,7 +14,11 @@ export function useAudioAnalyzer(audioElement: HTMLAudioElement | null) {
     try {
       // Create audio context if it doesn't exist
       if (!context) {
-        context = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const AudioContextClass = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+        if (!AudioContextClass) {
+          throw new Error('Web Audio API is not supported in this browser.');
+        }
+        context = new AudioContextClass();
         setAudioContext(context);
       }
 

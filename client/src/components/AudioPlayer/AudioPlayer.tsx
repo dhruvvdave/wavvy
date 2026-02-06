@@ -9,7 +9,8 @@ export default function AudioPlayer({ onAudioElement }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [currentTrack, setCurrentTrackLocal] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const { isPlaying, currentTime, duration, volume, setIsPlaying, setCurrentTime, setDuration, setVolume, setCurrentTrack } = useAudioStore();
+  const { isPlaying, currentTime, duration, volume, setIsPlaying, setCurrentTime, setDuration, setVolume, setCurrentTrack } =
+    useAudioStore();
 
   useEffect(() => {
     if (audioRef.current && onAudioElement) {
@@ -74,12 +75,10 @@ export default function AudioPlayer({ onAudioElement }: AudioPlayerProps) {
       const url = URL.createObjectURL(file);
       audioRef.current.src = url;
       setCurrentTrackLocal(file.name);
-      
-      // Update track metadata in store
+
       setCurrentTrack({
-        title: file.name.replace(/\.[^/.]+$/, ''), // Remove extension
+        title: file.name.replace(/\.[^/.]+$/, ''),
         artist: 'Local File',
-        albumArt: undefined,
       });
     }
   };
@@ -104,7 +103,7 @@ export default function AudioPlayer({ onAudioElement }: AudioPlayerProps) {
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    
+
     const file = e.dataTransfer.files[0];
     if (file && file.type.startsWith('audio/')) {
       handleFileUpload(file);
@@ -112,9 +111,8 @@ export default function AudioPlayer({ onAudioElement }: AudioPlayerProps) {
   };
 
   return (
-    <div className="glass p-6 rounded-2xl gradient-border">
-      <h2 className="text-3xl font-bold gradient-text mb-6">📁 Audio Player</h2>
-      
+    <div className="rounded-xl border border-sky-200/20 bg-transparent p-5">
+      <h2 className="text-lg font-medium text-white">Upload audio</h2>
       <audio ref={audioRef} />
 
       {!currentTrack ? (
@@ -122,41 +120,28 @@ export default function AudioPlayer({ onAudioElement }: AudioPlayerProps) {
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          className={`
-            border-2 border-dashed rounded-xl p-12 text-center transition-all duration-300
-            ${isDragging 
-              ? 'border-primary bg-primary/10 shadow-[0_0_30px_rgba(139,92,246,0.3)]' 
-              : 'border-white/20 hover:border-primary/50 hover:bg-white/5'
-            }
-          `}
+          className={`mt-4 rounded-lg border border-dashed p-10 text-center transition-colors ${
+            isDragging ? 'border-sky-200/60 bg-sky-300/15' : 'border-sky-200/25 bg-sky-950/20'
+          }`}
         >
-          <div className={`transition-transform duration-300 ${isDragging ? '-translate-y-2' : ''}`}>
-            <div className="text-6xl mb-4">🎵</div>
-            <h3 className="text-xl font-bold mb-2">Drop your audio file here</h3>
-            <p className="text-gray-400 mb-6">or click to browse</p>
-            <label className="btn-primary cursor-pointer inline-block">
-              📤 Choose Audio File
-              <input
-                type="file"
-                accept="audio/mp3,audio/wav,audio/ogg,audio/m4a"
-                onChange={handleFileSelect}
-                className="hidden"
-              />
-            </label>
-            <p className="text-xs text-gray-500 mt-4">
-              Supports MP3, WAV, OGG, M4A
-            </p>
-          </div>
+          <p className="text-sm text-white/85">Drop file here</p>
+          <p className="text-xs text-sky-100/55 mt-1 mb-4">MP3, WAV, OGG, M4A</p>
+          <label className="inline-flex cursor-pointer rounded-md border border-sky-200/30 bg-sky-300/15 hover:bg-sky-200/25 px-4 py-2 text-sm text-white">
+            Choose file
+            <input
+              type="file"
+              accept="audio/mp3,audio/wav,audio/ogg,audio/m4a"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+          </label>
         </div>
       ) : (
-        <div className="space-y-6">
-          <div className="flex items-center gap-4 glass p-4 rounded-xl">
-            <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-3xl">
-              🎵
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold truncate text-lg">{currentTrack}</h3>
-              <p className="text-sm text-gray-400">Now Playing</p>
+        <div className="mt-4 space-y-4">
+          <div className="rounded-lg border border-sky-200/20 bg-sky-950/20 p-3 flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-sm text-white truncate">{currentTrack}</p>
+              <p className="text-xs text-sky-100/55">Loaded</p>
             </div>
             <button
               onClick={() => {
@@ -167,58 +152,41 @@ export default function AudioPlayer({ onAudioElement }: AudioPlayerProps) {
                   audioRef.current.src = '';
                 }
               }}
-              className="text-gray-400 hover:text-red-400 transition-colors"
+              className="rounded-md border border-sky-200/30 px-3 py-1.5 text-xs hover:bg-sky-200/15"
             >
-              ✕
+              Remove
             </button>
           </div>
 
-          <div className="flex items-center gap-4">
-            <button
-              onClick={togglePlay}
-              className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-secondary neon-glow-strong flex items-center justify-center text-2xl font-bold shadow-lg hover:scale-110 active:scale-90 transition-transform"
-            >
-              {isPlaying ? '⏸' : '▶'}
+          <div className="flex items-center gap-3">
+            <button onClick={togglePlay} className="rounded-full w-10 h-10 border border-sky-200/30 hover:bg-sky-200/15 text-sm">
+              {isPlaying ? '❚❚' : '▶'}
             </button>
 
             <div className="flex-1 space-y-2">
-              <div className="relative">
-                <input
-                  type="range"
-                  min="0"
-                  max={duration || 0}
-                  value={currentTime}
-                  onChange={handleSeek}
-                  className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:shadow-[0_0_10px_rgba(139,92,246,0.8)] [&::-webkit-slider-thumb]:cursor-pointer"
-                />
-                <div 
-                  className="absolute top-0 left-0 h-2 bg-gradient-to-r from-primary to-secondary rounded-lg pointer-events-none"
-                  style={{ width: `${duration ? (currentTime / duration) * 100 : 0}%` }}
-                />
-              </div>
-              <div className="flex justify-between text-sm text-gray-400 font-mono">
+              <input
+                type="range"
+                min="0"
+                max={duration || 0}
+                value={currentTime}
+                onChange={handleSeek}
+                className="w-full h-2 bg-sky-100/15 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-sky-100"
+              />
+              <div className="flex justify-between text-xs text-sky-100/55">
                 <span>{formatTime(currentTime)}</span>
                 <span>{formatTime(duration)}</span>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 glass px-4 py-3 rounded-lg">
-              <button
-                onClick={() => setVolume(volume > 0 ? 0 : 0.7)}
-                className="text-xl hover:scale-110 active:scale-90 transition-transform"
-              >
-                {volume === 0 ? '🔇' : volume < 0.5 ? '🔉' : '🔊'}
-              </button>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.01"
-                value={volume}
-                onChange={(e) => setVolume(Number(e.target.value))}
-                className="w-24 h-2 bg-white/10 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-secondary [&::-webkit-slider-thumb]:shadow-[0_0_8px_rgba(6,182,212,0.8)]"
-              />
-            </div>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              value={volume}
+              onChange={(e) => setVolume(Number(e.target.value))}
+              className="w-20 h-2 bg-sky-100/15 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-sky-100"
+            />
           </div>
         </div>
       )}
