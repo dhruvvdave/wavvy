@@ -3,20 +3,28 @@ import { Beat, PatternData } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
+interface AuthUser {
+  id: string;
+  username: string;
+  email: string;
+}
+
+interface AuthResponse {
+  token: string;
+  user: AuthUser;
+}
+
 export const beatsService = {
-  // Get all beats
   async getBeats(): Promise<Beat[]> {
     const response = await axios.get(`${API_URL}/beats`);
     return response.data.beats;
   },
 
-  // Get beat by ID
   async getBeat(id: string): Promise<Beat> {
     const response = await axios.get(`${API_URL}/beats/${id}`);
     return response.data.beat;
   },
 
-  // Create new beat
   async createBeat(data: {
     title: string;
     description?: string;
@@ -27,7 +35,6 @@ export const beatsService = {
     return response.data.beat;
   },
 
-  // Update beat
   async updateBeat(
     id: string,
     data: Partial<{
@@ -41,14 +48,12 @@ export const beatsService = {
     return response.data.beat;
   },
 
-  // Delete beat
   async deleteBeat(id: string): Promise<void> {
     await axios.delete(`${API_URL}/beats/${id}`);
   },
 };
 
 export const audioService = {
-  // Upload audio file
   async uploadFile(file: File): Promise<{ filename: string; url: string }> {
     const formData = new FormData();
     formData.append('audio', file);
@@ -62,38 +67,33 @@ export const audioService = {
 };
 
 export const authService = {
-  // Register user
   async register(data: {
     username: string;
     email: string;
     password: string;
-  }): Promise<{ token: string; user: any }> {
+  }): Promise<AuthResponse> {
     const response = await axios.post(`${API_URL}/auth/register`, data);
     return response.data;
   },
 
-  // Login user
   async login(data: {
     email: string;
     password: string;
-  }): Promise<{ token: string; user: any }> {
+  }): Promise<AuthResponse> {
     const response = await axios.post(`${API_URL}/auth/login`, data);
     return response.data;
   },
 
-  // Set auth token
   setAuthToken(token: string) {
-    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    axios.defaults.headers.common.Authorization = `Bearer ${token}`;
     localStorage.setItem('token', token);
   },
 
-  // Clear auth token
   clearAuthToken() {
-    delete axios.defaults.headers.common['Authorization'];
+    delete axios.defaults.headers.common.Authorization;
     localStorage.removeItem('token');
   },
 
-  // Load token from storage
   loadToken() {
     const token = localStorage.getItem('token');
     if (token) {
