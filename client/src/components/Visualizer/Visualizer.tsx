@@ -41,6 +41,8 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
   const progressRef = useRef<HTMLDivElement>(null);
   const volumeRef = useRef<HTMLDivElement>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
+  const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
+  const connectedElementRef = useRef<HTMLAudioElement | null>(null);
   const particlesRef = useRef<Particle[]>([]);
   const fireworksRef = useRef<Firework[]>([]);
   const matrixColumnsRef = useRef<number[]>([]);
@@ -85,9 +87,8 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
 
   // Handle audio element connection with improved AudioContext settings
   useEffect(() => {
-    if (!audioElement || !canvasRef.current) return;
+    if (!audioElement) return;
 
-    // Enable preservesPitch for better audio quality
     const audioEl = audioElement as unknown as HTMLAudioElement & HTMLAudioElementExtended;
     if ('preservesPitch' in audioElement) {
       audioEl.preservesPitch = true;
@@ -101,11 +102,7 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
     let analyzerNode = analyser;
 
     if (!context) {
-      // Better AudioContext setup for lower latency and better quality
-      context = new AudioContext({
-        latencyHint: 'interactive',
-        sampleRate: 44100
-      });
+      context = new AudioContext({ latencyHint: 'interactive', sampleRate: 44100 });
       setAudioContext(context);
     }
 
@@ -114,18 +111,44 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
       analyzerNode.fftSize = 512;
       analyzerNode.smoothingTimeConstant = 0.85;
       setAnalyser(analyzerNode);
-      analyserRef.current = analyzerNode;
+    }
+
+    analyserRef.current = analyzerNode;
+
+    if (!sourceRef.current || connectedElementRef.current !== audioElement) {
+      try {
+        sourceRef.current?.disconnect();
+      } catch {
+        // no-op
+      }
 
       try {
-        const source = context.createMediaElementSource(audioElement);
-        source.connect(analyzerNode);
-        analyzerNode.connect(context.destination);
+        sourceRef.current = context.createMediaElementSource(audioElement);
+        sourceRef.current.connect(analyzerNode);
+        connectedElementRef.current = audioElement;
       } catch (error) {
-        console.debug('Audio source already connected:', error);
+        console.debug('Audio source connection warning:', error);
       }
-    } else {
-      analyserRef.current = analyzerNode;
     }
+
+    try {
+      analyzerNode.connect(context.destination);
+    } catch {
+      // Already connected
+    }
+
+    const resumeContext = () => {
+      if (context && context.state === 'suspended') {
+        context.resume().catch(() => undefined);
+      }
+    };
+
+    audioElement.addEventListener('play', resumeContext);
+    resumeContext();
+
+    return () => {
+      audioElement.removeEventListener('play', resumeContext);
+    };
   }, [audioElement, audioContext, analyser, setAudioContext, setAnalyser]);
 
   // Update time and duration from audio element
@@ -176,7 +199,7 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
     ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
     ctx.font = '20px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('Upload or search for music...', centerX, centerY);
+    ctx.fillText('Drop or load audio to visualize...', centerX, centerY);
   }, []);
 
   const drawBars = useCallback((ctx: CanvasRenderingContext2D, dataArray: Uint8Array, width: number, height: number) => {
@@ -702,7 +725,7 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
         isFullscreen ? 'fixed inset-4 z-50' : 'w-full'
       }`}
     >
-      <div className="relative w-full aspect-video max-h-[70vh] rounded-2xl overflow-hidden bg-black/40 backdrop-blur border border-white/5" style={{ willChange: 'transform' }}>
+      <div className="relative w-full aspect-video max-h-[70vh] rounded-2xl overflow-hidden bg-gradient-to-b from-sky-700/10 via-slate-950/15 to-transparent backdrop-blur-sm border border-sky-200/10" style={{ willChange: 'transform' }}>
         <canvas
           ref={canvasRef}
           className="w-full h-full"
@@ -710,7 +733,7 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
         
         {/* Controls overlay - integrated into visualizer */}
         {audioElement && (
-          <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-xl border-t border-white/10 p-4">
+          <div className="absolute bottom-0 left-0 right-0 bg-slate-950/45 backdrop-blur-xl border-t border-sky-200/10 p-4">
             {/* Track info */}
             {currentTrack && (
               <div className="flex items-center gap-3 mb-3">
@@ -740,7 +763,7 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
                 className="h-1.5 bg-white/10 rounded-full overflow-hidden cursor-pointer"
               >
                 <div 
-                  className="h-full bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full transition-all duration-100"
+                  className="h-full bg-gradient-to-r from-sky-400 to-cyan-300 rounded-full transition-all duration-100"
                   style={{ width: `${progress}%` }}
                 />
               </div>
@@ -754,7 +777,7 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
             <div className="flex items-center justify-between gap-4">
               <button 
                 onClick={handlePlayPause}
-                className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-cyan-500 flex items-center justify-center text-lg hover:shadow-[0_0_20px_rgba(168,85,247,0.6)] transition-shadow"
+                className="w-10 h-10 rounded-full bg-gradient-to-r from-sky-500 to-cyan-400 flex items-center justify-center text-lg hover:shadow-[0_0_20px_rgba(56,189,248,0.45)] transition-shadow"
               >
                 {isPlaying ? '⏸' : '▶'}
               </button>
