@@ -189,14 +189,14 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
       const radius = 50 + i * 40 + Math.sin(time * 2 + i) * 20;
       const alpha = 0.3 - i * 0.1;
       
-      ctx.strokeStyle = `rgba(168, 85, 247, ${alpha})`;
+      ctx.strokeStyle = `rgba(56, 189, 248, ${alpha})`;
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
       ctx.stroke();
     }
     
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.fillStyle = 'rgba(226, 232, 240, 0.7)';
     ctx.font = '20px sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('Drop or load audio to visualize...', centerX, centerY);
@@ -212,9 +212,9 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
       const x = i * (barWidth + 2);
       
       const gradient = ctx.createLinearGradient(x, height, x, height - barHeight);
-      gradient.addColorStop(0, '#a855f7');
-      gradient.addColorStop(0.5, '#22d3ee');
-      gradient.addColorStop(1, '#f472b6');
+      gradient.addColorStop(0, '#38bdf8');
+      gradient.addColorStop(0.5, '#0ea5e9');
+      gradient.addColorStop(1, '#38bdf8');
       
       ctx.fillStyle = gradient;
       
@@ -228,8 +228,8 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
       }
       
       const reflectionGradient = ctx.createLinearGradient(x, height, x, height + barHeight * 0.3);
-      reflectionGradient.addColorStop(0, `rgba(168, 85, 247, ${value * 0.3})`);
-      reflectionGradient.addColorStop(1, 'rgba(168, 85, 247, 0)');
+      reflectionGradient.addColorStop(0, `rgba(56, 189, 248, ${value * 0.3})`);
+      reflectionGradient.addColorStop(1, 'rgba(56, 189, 248, 0)');
       
       ctx.fillStyle = reflectionGradient;
       
@@ -245,9 +245,9 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
 
   const drawWave = useCallback((ctx: CanvasRenderingContext2D, dataArray: Uint8Array, width: number, height: number) => {
     const colors = [
-      { stroke: '#a855f7', fill: 'rgba(168, 85, 247, 0.2)' },
-      { stroke: '#22d3ee', fill: 'rgba(34, 211, 238, 0.15)' },
-      { stroke: '#f472b6', fill: 'rgba(244, 114, 182, 0.1)' },
+      { stroke: '#38bdf8', fill: 'rgba(56, 189, 248, 0.2)' },
+      { stroke: '#0ea5e9', fill: 'rgba(14, 165, 233, 0.14)' },
+      { stroke: '#7dd3fc', fill: 'rgba(125, 211, 252, 0.08)' },
     ];
     
     colors.forEach((color, layerIndex) => {
@@ -299,8 +299,8 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
 
     const avgValue = dataArray.reduce((a, b) => a + b, 0) / dataArray.length / 255;
     const glowGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius * 1.5);
-    glowGradient.addColorStop(0, `rgba(168, 85, 247, ${avgValue * 0.6})`);
-    glowGradient.addColorStop(0.5, `rgba(34, 211, 238, ${avgValue * 0.3})`);
+    glowGradient.addColorStop(0, `rgba(56, 189, 248, ${avgValue * 0.6})`);
+    glowGradient.addColorStop(0.5, `rgba(14, 165, 233, ${avgValue * 0.3})`);
     glowGradient.addColorStop(1, 'transparent');
     ctx.fillStyle = glowGradient;
     ctx.beginPath();
@@ -361,7 +361,7 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
       centerX, centerY, 0, 
       centerX, centerY, 200 * (1 + bassValue)
     );
-    centerGlow.addColorStop(0, `rgba(168, 85, 247, ${0.5 * bassValue})`);
+    centerGlow.addColorStop(0, `rgba(56, 189, 248, ${0.5 * bassValue})`);
     centerGlow.addColorStop(0.4, `rgba(34, 211, 238, ${0.3 * bassValue})`);
     centerGlow.addColorStop(0.7, `rgba(244, 114, 182, ${0.2 * bassValue})`);
     centerGlow.addColorStop(1, 'transparent');
@@ -369,7 +369,7 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
     ctx.fillStyle = centerGlow;
     ctx.fillRect(0, 0, width, height);
     
-    ctx.strokeStyle = `rgba(168, 85, 247, ${bassValue * 0.8})`;
+    ctx.strokeStyle = `rgba(56, 189, 248, ${bassValue * 0.8})`;
     ctx.lineWidth = 3;
     ctx.beginPath();
     ctx.arc(centerX, centerY, 50 + bassValue * 100, 0, Math.PI * 2);
@@ -387,7 +387,7 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
       const y1 = height / 2 + Math.sin(i * 0.3 + time * 2) * 100 * (0.5 + freq * 0.5);
       const y2 = height / 2 + Math.sin(i * 0.3 + time * 2 + Math.PI) * 100 * (0.5 + freq * 0.5);
       
-      ctx.strokeStyle = `rgba(168, 85, 247, ${freq * 0.8 + 0.2})`;
+      ctx.strokeStyle = `rgba(56, 189, 248, ${freq * 0.8 + 0.2})`;
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(x, y1);
@@ -520,7 +520,7 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
       ctx.closePath();
       
       const gradient = ctx.createLinearGradient(0, height - 200, 0, height);
-      gradient.addColorStop(0, `rgba(168, 85, 247, ${alpha * 0.6})`);
+      gradient.addColorStop(0, `rgba(56, 189, 248, ${alpha * 0.6})`);
       gradient.addColorStop(0.5, `rgba(34, 211, 238, ${alpha * 0.4})`);
       gradient.addColorStop(1, `rgba(244, 114, 182, ${alpha * 0.2})`);
       
@@ -557,9 +557,9 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
     ctx.closePath();
     
     const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, baseRadius * 2);
-    gradient.addColorStop(0, 'rgba(168, 85, 247, 0.8)');
-    gradient.addColorStop(0.5, 'rgba(34, 211, 238, 0.6)');
-    gradient.addColorStop(1, 'rgba(244, 114, 182, 0.2)');
+    gradient.addColorStop(0, 'rgba(56, 189, 248, 0.8)');
+    gradient.addColorStop(0.5, 'rgba(14, 165, 233, 0.55)');
+    gradient.addColorStop(1, 'rgba(125, 211, 252, 0.18)');
     
     ctx.fillStyle = gradient;
     ctx.fill();
@@ -614,8 +614,8 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
 
       // Dark gradient background
       const gradient = ctx.createLinearGradient(0, 0, 0, height);
-      gradient.addColorStop(0, '#050507');
-      gradient.addColorStop(1, '#0a0a0f');
+      gradient.addColorStop(0, 'rgba(2, 6, 23, 0.2)');
+      gradient.addColorStop(1, 'rgba(2, 6, 23, 0.7)');
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, width, height);
 
@@ -748,7 +748,7 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
                   <h3 className="font-semibold text-white text-sm truncate">
                     {currentTrack.title || 'Unknown Track'}
                   </h3>
-                  <p className="text-gray-400 text-xs truncate">
+                  <p className="text-slate-300/70 text-xs truncate">
                     {currentTrack.artist || 'Unknown Artist'}
                   </p>
                 </div>
@@ -767,7 +767,7 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
                   style={{ width: `${progress}%` }}
                 />
               </div>
-              <div className="flex justify-between mt-1 text-xs text-gray-400">
+              <div className="flex justify-between mt-1 text-xs text-slate-300/70">
                 <span>{formatTime(currentTime)}</span>
                 <span>{formatTime(duration)}</span>
               </div>
@@ -784,14 +784,14 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
 
               {/* Volume control */}
               <div className="flex items-center gap-2 flex-1 max-w-[200px]">
-                <span className="text-gray-400 text-sm">🔊</span>
+                <span className="text-slate-300/70 text-sm">🔊</span>
                 <div 
                   ref={volumeRef}
                   onClick={handleVolumeChange}
                   className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden cursor-pointer"
                 >
                   <div 
-                    className="h-full bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full"
+                    className="h-full bg-gradient-to-r from-sky-400 to-cyan-300 rounded-full"
                     style={{ width: `${volume * 100}%` }}
                   />
                 </div>
@@ -799,7 +799,7 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
 
               <button
                 onClick={toggleFullscreen}
-                className="px-3 py-1.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all"
+                className="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-300/70 hover:text-white hover:bg-white/5 transition-all"
                 title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
               >
                 {isFullscreen ? '✕' : '⛶'}
@@ -809,7 +809,7 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
         )}
         
         {/* Mode selector */}
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 flex gap-1 bg-black/60 backdrop-blur-xl rounded-full px-3 py-2 border border-white/10 overflow-x-auto max-w-[90vw]">
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 flex gap-1 bg-slate-950/30 backdrop-blur-xl rounded-full px-3 py-2 border border-sky-200/10 overflow-x-auto max-w-[90vw]">
           {modes.map((mode) => (
             <button
               key={mode.id}
@@ -817,7 +817,7 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
               className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 whitespace-nowrap ${
                 visualizerMode === mode.id 
                   ? 'bg-white/10 text-white' 
-                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  : 'text-slate-300/70 hover:text-white hover:bg-white/5'
               }`}
               title={mode.label}
             >
