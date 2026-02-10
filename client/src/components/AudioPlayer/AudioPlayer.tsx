@@ -111,7 +111,8 @@ export default function AudioPlayer({ onAudioElement }: AudioPlayerProps) {
   };
 
   return (
-    <div className="rounded-2xl border border-sky-200/10 bg-sky-950/5">
+    <div className="rounded-xl border border-sky-200/20 bg-transparent p-5">
+      <h2 className="text-lg font-medium text-white">Upload audio</h2>
       <audio ref={audioRef} />
 
       {!currentTrack ? (
@@ -119,14 +120,14 @@ export default function AudioPlayer({ onAudioElement }: AudioPlayerProps) {
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          className={`rounded-2xl border border-dashed px-6 py-12 text-center transition-colors ${
-            isDragging ? 'border-sky-200/70 bg-sky-400/10' : 'border-sky-200/20 bg-transparent'
+          className={`mt-4 rounded-lg border border-dashed p-10 text-center transition-colors ${
+            isDragging ? 'border-sky-200/60 bg-sky-300/15' : 'border-sky-200/25 bg-sky-950/20'
           }`}
         >
-          <p className="text-sm text-white/80">Drop audio file here</p>
-          <p className="text-xs text-sky-100/50 mt-2">MP3 · WAV · OGG · M4A</p>
-          <label className="mt-5 inline-flex cursor-pointer rounded-full border border-sky-200/30 px-4 py-2 text-xs text-white/90 hover:bg-sky-200/10">
-            Browse files
+          <p className="text-sm text-white/85">Drop file here</p>
+          <p className="text-xs text-sky-100/55 mt-1 mb-4">MP3, WAV, OGG, M4A</p>
+          <label className="inline-flex cursor-pointer rounded-md border border-sky-200/30 bg-sky-300/15 hover:bg-sky-200/25 px-4 py-2 text-sm text-white">
+            Choose file
             <input
               type="file"
               accept="audio/mp3,audio/wav,audio/ogg,audio/m4a"
@@ -136,11 +137,11 @@ export default function AudioPlayer({ onAudioElement }: AudioPlayerProps) {
           </label>
         </div>
       ) : (
-        <div className="px-6 py-5 space-y-4">
-          <div className="flex items-center justify-between gap-3">
+        <div className="mt-4 space-y-4">
+          <div className="rounded-lg border border-sky-200/20 bg-sky-950/20 p-3 flex items-center justify-between gap-3">
             <div className="min-w-0">
               <p className="text-sm text-white truncate">{currentTrack}</p>
-              <p className="text-xs text-sky-100/55">Local file</p>
+              <p className="text-xs text-sky-100/55">Loaded</p>
             </div>
             <button
               onClick={() => {
@@ -151,14 +152,14 @@ export default function AudioPlayer({ onAudioElement }: AudioPlayerProps) {
                   audioRef.current.src = '';
                 }
               }}
-              className="rounded-full border border-sky-200/20 px-3 py-1 text-xs text-white/80 hover:bg-sky-200/10"
+              className="rounded-md border border-sky-200/30 px-3 py-1.5 text-xs hover:bg-sky-200/15"
             >
               Remove
             </button>
           </div>
 
           <div className="flex items-center gap-3">
-            <button onClick={togglePlay} className="rounded-full w-10 h-10 border border-sky-200/20 hover:bg-sky-200/10 text-sm">
+            <button onClick={togglePlay} className="rounded-full w-10 h-10 border border-sky-200/30 hover:bg-sky-200/15 text-sm">
               {isPlaying ? '❚❚' : '▶'}
             </button>
 
@@ -169,7 +170,7 @@ export default function AudioPlayer({ onAudioElement }: AudioPlayerProps) {
                 max={duration || 0}
                 value={currentTime}
                 onChange={handleSeek}
-                className="w-full h-1.5 bg-sky-200/10 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-sky-200"
+                className="w-full h-2 bg-sky-100/15 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-sky-100"
               />
               <div className="flex justify-between text-xs text-sky-100/55">
                 <span>{formatTime(currentTime)}</span>
@@ -184,7 +185,7 @@ export default function AudioPlayer({ onAudioElement }: AudioPlayerProps) {
               step="0.01"
               value={volume}
               onChange={(e) => setVolume(Number(e.target.value))}
-              className="w-20 h-1.5 bg-sky-200/10 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-sky-200"
+              className="w-20 h-2 bg-sky-100/15 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-sky-100"
             />
           </div>
         </div>

@@ -17,33 +17,35 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="container mx-auto max-w-5xl px-4 py-10 space-y-12">
-      <section className="text-center space-y-3">
-        <p className="text-xs uppercase tracking-[0.3em] text-sky-100/50">Wavvy</p>
-        <h1 className="text-4xl md:text-6xl font-light text-white/90 tracking-tight">Audio Canvas</h1>
-        <p className="text-sm md:text-base text-sky-100/60">Load a source. Press play. Watch it breathe.</p>
+    <div className="container mx-auto max-w-6xl px-4 py-8 space-y-8">
+      <section className="text-center py-10 md:py-14">
+        <h1 className="text-4xl md:text-6xl font-semibold text-white/90 tracking-tight">Wavvy</h1>
+        <p className="mt-3 text-sm md:text-base text-sky-100/70">Minimal audio visual studio</p>
       </section>
 
       <Visualizer audioElement={audioElement} />
 
-      <section className="space-y-6">
-        <div className="flex items-center justify-center gap-6 text-xs uppercase tracking-[0.25em] text-sky-100/50">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`pb-2 transition-colors ${
-                activeTab === tab.id
-                  ? 'text-white border-b border-sky-200/60'
-                  : 'text-sky-100/50 hover:text-sky-100/80'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+      <section className="mx-auto max-w-4xl rounded-2xl border border-sky-200/15 bg-gradient-to-b from-sky-500/10 via-sky-900/10 to-black/20 backdrop-blur-xl overflow-hidden">
+        <div className="grid grid-cols-3 gap-2 p-2 border-b border-sky-200/10">
+          {tabs.map((tab) => {
+            const active = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`rounded-lg px-3 py-2 text-sm transition-colors ${
+                  active
+                    ? 'bg-sky-300/20 text-sky-50 border border-sky-200/30'
+                    : 'text-sky-100/60 hover:bg-sky-200/10 hover:text-sky-50'
+                }`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
 
-        <div className="max-w-3xl mx-auto">
+        <div className="p-4 md:p-6">
           {activeTab === 'upload' && <AudioPlayer onAudioElement={setAudioElement} />}
           {activeTab === 'spotify' && <SpotifySearch />}
           {activeTab === 'url' && <DirectURLPlayer onAudioElement={setAudioElement} />}

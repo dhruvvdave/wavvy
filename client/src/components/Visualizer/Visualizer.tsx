@@ -725,7 +725,7 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
         isFullscreen ? 'fixed inset-4 z-50' : 'w-full'
       }`}
     >
-      <div className="relative w-full aspect-video max-h-[70vh] rounded-[28px] overflow-hidden bg-transparent border border-sky-200/10" style={{ willChange: 'transform' }}>
+      <div className="relative w-full aspect-video max-h-[70vh] rounded-2xl overflow-hidden bg-gradient-to-b from-sky-700/10 via-slate-950/15 to-transparent backdrop-blur-sm border border-sky-200/10" style={{ willChange: 'transform' }}>
         <canvas
           ref={canvasRef}
           className="w-full h-full"
@@ -733,7 +733,7 @@ export default function Visualizer({ audioElement }: VisualizerProps) {
         
         {/* Controls overlay - integrated into visualizer */}
         {audioElement && (
-          <div className="absolute bottom-0 left-0 right-0 bg-slate-950/25 backdrop-blur-xl border-t border-sky-200/10 p-4">
+          <div className="absolute bottom-0 left-0 right-0 bg-slate-950/45 backdrop-blur-xl border-t border-sky-200/10 p-4">
             {/* Track info */}
             {currentTrack && (
               <div className="flex items-center gap-3 mb-3">
